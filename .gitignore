@@ -1,0 +1,13 @@
+# Ignore user/dev secrets
+appsettings.Development.json
+**/appsettings.Development.json
+
+# Build output
+**/bin/
+**/obj/
+/.vs/AutomationTools
+/AutomationTools/bin/Debug/net8.0
+/AutomationTools/obj
+/.vs/ProjectEvaluation
+
+

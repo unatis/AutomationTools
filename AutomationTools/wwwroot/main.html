@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ADO Sync</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --fg: #111;
+        --bg: #fff;
+        --muted: #6b7280;
+        --border: #d1d5db;
+        --accent: #2563eb;
+        --accent-contrast: #fff;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --fg: #e5e7eb;
+          --bg: #0b0f16;
+          --muted: #94a3b8;
+          --border: #1f2937;
+          --accent: #3b82f6;
+          --accent-contrast: #0b0f16;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 24px;
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        color: var(--fg);
+        background: var(--bg);
+      }
+      h1 { margin: 0 0 12px; font-size: 22px; }
+      p { margin: 0 0 16px; color: var(--muted); }
+      .row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+      label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+      input[type="file"], select, textarea {
+        width: 100%;
+        border: 1px solid var(--border);
+        padding: 8px;
+        border-radius: 6px;
+        background: transparent;
+        color: inherit;
+      }
+      textarea { min-height: 200px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+      .actions { display: flex; gap: 8px; align-items: center; margin: 12px 0; }
+      button {
+        border: 1px solid var(--accent);
+        background: var(--accent);
+        color: var(--accent-contrast);
+        padding: 8px 14px;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      button.secondary {
+        background: transparent;
+        color: var(--fg);
+        border-color: var(--border);
+      }
+      .status { margin-top: 8px; font-size: 13px; color: var(--muted); }
+      .result { white-space: pre-wrap; border: 1px solid var(--border); padding: 10px; border-radius: 6px; }
+      .tabs {
+        display: flex;
+        gap: 18px;
+        border-bottom: 1px solid var(--border);
+        margin: 8px 0 16px;
+      }
+      .tab-btn {
+        appearance: none;
+        background: none;
+        border: none;
+        padding: 10px 2px;
+        color: var(--muted);
+        font-size: 14px;
+        border-bottom: 2px solid transparent;
+        cursor: pointer;
+      }
+      .tab-btn.active {
+        color: var(--fg);
+        border-bottom-color: var(--accent);
+      }
+      .tab-panel { display: none; }
+      .tab-panel.active { display: block; }
+    </style>
+  </head>
+  <body>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="sync-tab">ADO Sync</button>
+      <button class="tab-btn" data-tab="generator-tab">Test generator</button>
+    </div>
+
+    <div id="sync-tab" class="tab-panel active">
+      <h1>ADO Sync</h1>
+      <p>Send Allure JSON to <code>/sync</code> with planId and suiteId.</p>
+
+      <div class="row">
+        <label>
+          planId
+          <select id="planId">
+            <option value="">Loading plans...</option>
+          </select>
+        </label>
+        <label>
+          suiteId
+          <select id="suiteId">
+            <option value="">Select plan first...</option>
+          </select>
+        </label>
+      </div>
+
+      <label>
+        Paste JSON body
+        <textarea id="jsonText" placeholder="Paste Allure result.json object or array here..."></textarea>
+      </label>
+
+      <div class="row">
+        <label>
+          Or choose JSON file
+          <input id="jsonFile" type="file" accept=".json,application/json" />
+        </label>
+      </div>
+
+      <div class="actions">
+        <button id="sendBtn">Send to /sync</button>
+        <button id="clearBtn" class="secondary">Clear</button>
+      </div>
+
+      <div class="status" id="status"></div>
+      <div class="result" id="result"></div>
+    </div>
+
+    <div id="generator-tab" class="tab-panel">
+      <h1>Test generator</h1>
+
+      <label>
+        Paste JSON body
+        <textarea id="generatorJsonText" placeholder="Paste JSON here..."></textarea>
+      </label>
+
+      <div class="row">
+        <label>
+          Or choose JSON file
+          <input id="generatorJsonFile" type="file" accept=".json,application/json" />
+        </label>
+      </div>
+
+      <div class="actions">
+        <button id="genBtn">Generate ZIP</button>
+      </div>
+
+      <div class="status" id="genStatus"></div>
+      <div class="result" id="genResult"></div>
+    </div>
+
+    <script>
+      const planIdEl = document.getElementById("planId");
+      const suiteIdEl = document.getElementById("suiteId");
+      const jsonTextEl = document.getElementById("jsonText");
+      const jsonFileEl = document.getElementById("jsonFile");
+      const sendBtn = document.getElementById("sendBtn");
+      const clearBtn = document.getElementById("clearBtn");
+      const statusEl = document.getElementById("status");
+      const resultEl = document.getElementById("result");
+      const generatorJsonTextEl = document.getElementById("generatorJsonText");
+      const generatorJsonFileEl = document.getElementById("generatorJsonFile");
+      const genBtn = document.getElementById("genBtn");
+      const genStatusEl = document.getElementById("genStatus");
+      const genResultEl = document.getElementById("genResult");
+      const tabs = document.querySelectorAll(".tab-btn");
+      const panels = document.querySelectorAll(".tab-panel");
+      const defaultPlanId = "11937";
+      const defaultSuiteId = "29357";
+
+      function setStatus(message) {
+        statusEl.textContent = message || "";
+      }
+
+      function setResult(value) {
+        resultEl.textContent = value || "";
+      }
+
+      function setGenStatus(message) {
+        genStatusEl.textContent = message || "";
+      }
+
+      function setGenResult(value) {
+        genResultEl.textContent = value || "";
+      }
+
+      function setOptions(selectEl, items, selectedId, placeholder) {
+        selectEl.innerHTML = "";
+        if (!items || items.length === 0) {
+          const opt = document.createElement("option");
+          opt.value = "";
+          opt.textContent = placeholder || "No items found";
+          selectEl.appendChild(opt);
+          return;
+        }
+
+        items.forEach((item) => {
+          const opt = document.createElement("option");
+          opt.value = String(item.id);
+          opt.textContent = item.name ? `${item.id} - ${item.name}` : String(item.id);
+          selectEl.appendChild(opt);
+        });
+
+        const target = String(selectedId || "");
+        if (target) {
+          const match = Array.from(selectEl.options).find((o) => o.value === target);
+          if (match) selectEl.value = target;
+        }
+      }
+
+      function setActiveTab(tabId) {
+        panels.forEach((p) => p.classList.toggle("active", p.id === tabId));
+        tabs.forEach((b) => b.classList.toggle("active", b.dataset.tab === tabId));
+      }
+
+      tabs.forEach((b) => b.addEventListener("click", () => setActiveTab(b.dataset.tab)));
+
+      async function loadPlans() {
+        try {
+          const resp = await fetch("/debug/testplans");
+          if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
+          const data = await resp.json();
+          setOptions(planIdEl, data.items, defaultPlanId, "No plans");
+          const selectedPlanId = planIdEl.value || defaultPlanId;
+          await loadSuites(selectedPlanId);
+        } catch (err) {
+          setStatus("Failed to load plans: " + err.message);
+          setOptions(planIdEl, [{ id: defaultPlanId, name: "" }], defaultPlanId, "No plans");
+          await loadSuites(defaultPlanId);
+        }
+      }
+
+      async function loadSuites(planId) {
+        if (!planId) {
+          setOptions(suiteIdEl, [], "", "Select plan first...");
+          return;
+        }
+        try {
+          const resp = await fetch(`/debug/testsuites?planId=${encodeURIComponent(planId)}`);
+          if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
+          const data = await resp.json();
+          setOptions(suiteIdEl, data.items, defaultSuiteId, "No suites");
+        } catch (err) {
+          setStatus("Failed to load suites: " + err.message);
+          setOptions(suiteIdEl, [{ id: defaultSuiteId, name: "" }], defaultSuiteId, "No suites");
+        }
+      }
+
+      async function readBody() {
+        const file = jsonFileEl.files && jsonFileEl.files[0];
+        if (file) {
+          return await file.text();
+        }
+        return jsonTextEl.value;
+      }
+
+      async function readGenBody() {
+        const file = generatorJsonFileEl.files && generatorJsonFileEl.files[0];
+        if (file) {
+          return await file.text();
+        }
+        return generatorJsonTextEl.value;
+      }
+
+      async function onSend() {
+        setStatus("");
+        setResult("");
+
+        const planId = planIdEl.value.trim();
+        const suiteId = suiteIdEl.value.trim();
+        if (!planId || !suiteId) {
+          setStatus("planId and suiteId are required.");
+          return;
+        }
+
+        const bodyText = (await readBody()).trim();
+        if (!bodyText) {
+          setStatus("Provide JSON in the textarea or choose a file.");
+          return;
+        }
+
+        try {
+          JSON.parse(bodyText);
+        } catch (err) {
+          setStatus("Invalid JSON: " + err.message);
+          return;
+        }
+
+        const url = `/sync?planId=${encodeURIComponent(planId)}&suiteId=${encodeURIComponent(suiteId)}`;
+        setStatus("Sending request...");
+
+        try {
+          const response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: bodyText
+          });
+
+          const text = await response.text();
+          let pretty = text;
+          try {
+            pretty = JSON.stringify(JSON.parse(text), null, 2);
+          } catch {
+            // keep raw
+          }
+
+          if (response.ok) {
+            setStatus("Success: " + response.status + " " + response.statusText);
+          } else {
+            setStatus("Error: " + response.status + " " + response.statusText);
+          }
+          setResult(pretty);
+        } catch (err) {
+          setStatus("Request failed: " + err.message);
+        }
+      }
+
+      function onClear() {
+        jsonTextEl.value = "";
+        jsonFileEl.value = "";
+        setStatus("");
+        setResult("");
+      }
+
+      async function onGenerateZip() {
+        setGenStatus("");
+        setGenResult("");
+
+        const json = (await readGenBody()).trim();
+        if (!json) {
+          setGenStatus("Provide JSON in the textarea or choose a file.");
+          return;
+        }
+
+        try {
+          JSON.parse(json);
+        } catch (err) {
+          setGenStatus("Invalid JSON: " + err.message);
+          return;
+        }
+
+        const baseName = "Generated";
+        setGenStatus("Generating...");
+
+        try {
+          const resp = await fetch("/test-generator", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ json, baseName })
+          });
+
+          if (!resp.ok) {
+            const msg = await resp.text();
+            setGenStatus("Error: " + resp.status + " " + resp.statusText);
+            setGenResult(msg);
+            return;
+          }
+
+          const blob = await resp.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = baseName + ".zip";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+
+          setGenStatus("ZIP ready.");
+        } catch (err) {
+          setGenStatus("Request failed: " + err.message);
+        }
+      }
+
+      planIdEl.addEventListener("change", () => loadSuites(planIdEl.value));
+      sendBtn.addEventListener("click", onSend);
+      clearBtn.addEventListener("click", onClear);
+      genBtn.addEventListener("click", onGenerateZip);
+
+      loadPlans();
+    </script>
+  </body>
+</html>

@@ -32,6 +32,31 @@ public static class TestGeneratorService
         return ms.ToArray();
     }
 
+    public static byte[] GenerateZipFromJsonTs(string json, string baseName)
+    {
+        var rec = JsonSerializer.Deserialize<Recording>(json, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+
+        if (rec == null || rec.Steps == null || rec.Steps.Count == 0)
+            throw new InvalidOperationException("No steps found.");
+
+        var locatorsCode = GenerateTsLocators(rec, baseName);
+        var pageCode = GenerateTsPage(rec, baseName);
+        var testCode = GenerateTsTest(rec, baseName);
+
+        using var ms = new MemoryStream();
+        using (var zip = new ZipArchive(ms, ZipArchiveMode.Create, leaveOpen: true))
+        {
+            WriteEntry(zip, $"{baseName}Mapper.ts", locatorsCode);
+            WriteEntry(zip, $"{baseName}Page.ts", pageCode);
+            WriteEntry(zip, $"{baseName}Test.ts", testCode);
+        }
+
+        return ms.ToArray();
+    }
+
     private static void WriteEntry(ZipArchive zip, string name, string content)
     {
         var entry = zip.CreateEntry(name, CompressionLevel.Optimal);
@@ -75,6 +100,36 @@ public static class TestGeneratorService
 
             sb.AppendLine($"    // Step {i + 1}: {step.Type} | url={step.Url}");
             sb.AppendLine($"    public By {fieldName} {{ get; }} = {locator.ByExpression};");
+            sb.AppendLine();
+        }
+
+        sb.AppendLine("}");
+        return sb.ToString();
+    }
+
+    private static string GenerateTsLocators(Recording rec, string baseName)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine($"export class {baseName}Mapper {{");
+
+        var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        for (int i = 0; i < rec.Steps.Count; i++)
+        {
+            var step = rec.Steps[i];
+            if (!StepNeedsElement(step)) continue;
+
+            var fieldName = MakeUnique(used, ToPascal(StepFriendlyName(step) ?? $"{step.Type}_{i + 1}"));
+            var selector = PickLocatorSelector(step);
+
+            sb.AppendLine($"  // Step {i + 1}: {step.Type} | url={step.Url}");
+            if (string.IsNullOrWhiteSpace(selector))
+            {
+                sb.AppendLine($"  // {fieldName}: NO LOCATOR (step {i + 1})");
+                continue;
+            }
+
+            sb.AppendLine($"  readonly {fieldName} = \"{Esc(selector)}\";");
             sb.AppendLine();
         }
 
@@ -239,6 +294,144 @@ public static class TestGeneratorService
         return sb.ToString();
     }
 
+    private static string GenerateTsPage(Recording rec, string baseName)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("import { Page } from \"@playwright/test\";");
+        sb.AppendLine($"import {{ {baseName}Mapper }} from \"./{baseName}Mapper\";");
+        sb.AppendLine();
+        sb.AppendLine($"export class {baseName}Page {{");
+        sb.AppendLine("  constructor(private readonly page: Page) {");
+        sb.AppendLine($"    this.map = new {baseName}Mapper();");
+        sb.AppendLine("  }");
+        sb.AppendLine();
+        sb.AppendLine($"  readonly map: {baseName}Mapper;");
+        sb.AppendLine();
+        sb.AppendLine("  async goTo(url: string) {");
+        sb.AppendLine("    await this.page.goto(url);");
+        sb.AppendLine("  }");
+        sb.AppendLine();
+        sb.AppendLine("  async ensureUrl(url: string) {");
+        sb.AppendLine("    const current = this.page.url();");
+        sb.AppendLine("    if (!current.startsWith(url)) {");
+        sb.AppendLine("      await this.goTo(url);");
+        sb.AppendLine("    }");
+        sb.AppendLine("  }");
+        sb.AppendLine();
+
+        var usedMethods = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var locatorFields = BuildStepToLocatorFieldMapTs(rec);
+
+        for (int i = 0; i < rec.Steps.Count; i++)
+        {
+            var step = rec.Steps[i];
+            var nextStep = (i + 1 < rec.Steps.Count) ? rec.Steps[i + 1] : null;
+            var expectedNextUrl = GetExpectedNextUrl(step, nextStep);
+
+            var friendly = StepFriendlyName(step) ?? $"{step.Type}_{i + 1}";
+            var actionPrefix = step.Type switch
+            {
+                "click" => "Click",
+                "input" => "Input",
+                "select" => "Select",
+                "scroll" => "Scroll",
+                "navigate" => "Navigate",
+                "setViewport" => "Viewport",
+                _ => "Step"
+            };
+
+            var methodName = MakeUnique(usedMethods, actionPrefix + ToPascal(friendly));
+
+            sb.AppendLine($"  // Step {i + 1}: {step.Type} | url={step.Url}");
+            sb.AppendLine($"  async {methodName}() {{");
+            if (string.Equals(step.Type, "navigate", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!string.IsNullOrWhiteSpace(step.Url))
+                    sb.AppendLine($"    await this.ensureUrl(\"{Esc(step.Url)}\");");
+                else
+                    sb.AppendLine("    // Navigate step without url");
+            }
+
+            switch (step.Type)
+            {
+                case "click":
+                    if (locatorFields.TryGetValue(i, out var clickField))
+                    {
+                        sb.AppendLine($"    await this.click(this.map.{clickField}, {(expectedNextUrl != null ? $"\"{Esc(expectedNextUrl)}\"" : "null")});");
+                    }
+                    else
+                    {
+                        sb.AppendLine("    // No locator for this click step");
+                    }
+                    break;
+
+                case "input":
+                    if (locatorFields.TryGetValue(i, out var inputField))
+                    {
+                        sb.AppendLine($"    await this.input(this.map.{inputField}, \"{Esc(step.Value)}\");");
+                    }
+                    else sb.AppendLine("    // No locator for this input step");
+                    break;
+
+                case "select":
+                    if (locatorFields.TryGetValue(i, out var selectField))
+                    {
+                        sb.AppendLine($"    await this.select(this.map.{selectField}, \"{Esc(step.Value)}\", \"{Esc(step.OptionText)}\");");
+                    }
+                    else sb.AppendLine("    // No locator for this select step");
+                    break;
+
+                case "scroll":
+                    sb.AppendLine($"    await this.scrollTo({(step.OffsetX ?? 0).ToString(System.Globalization.CultureInfo.InvariantCulture)}, {(step.OffsetY ?? 0).ToString(System.Globalization.CultureInfo.InvariantCulture)});");
+                    break;
+
+                case "navigate":
+                    break;
+
+                case "setViewport":
+                    if (step.Width is > 0 && step.Height is > 0)
+                    {
+                        sb.AppendLine($"    await this.page.setViewportSize({{ width: {step.Width.Value}, height: {step.Height.Value} }});");
+                    }
+                    else
+                    {
+                        sb.AppendLine("    // Viewport change step (no size provided)");
+                    }
+                    break;
+
+                default:
+                    sb.AppendLine($"    // Unsupported step type: {step.Type}");
+                    break;
+            }
+
+            sb.AppendLine("  }");
+            sb.AppendLine();
+        }
+
+        sb.AppendLine("  private async click(selector: string, expectedNextUrl?: string | null) {");
+        sb.AppendLine("    await this.page.locator(selector).click();");
+        sb.AppendLine("    if (expectedNextUrl) {");
+        sb.AppendLine("      await this.page.waitForURL(url => url.toString().startsWith(expectedNextUrl));");
+        sb.AppendLine("    }");
+        sb.AppendLine("  }");
+        sb.AppendLine();
+        sb.AppendLine("  private async input(selector: string, value?: string) {");
+        sb.AppendLine("    await this.page.locator(selector).fill(value ?? \"\");");
+        sb.AppendLine("  }");
+        sb.AppendLine();
+        sb.AppendLine("  private async select(selector: string, value?: string, optionText?: string) {");
+        sb.AppendLine("    const locator = this.page.locator(selector);");
+        sb.AppendLine("    if (value) await locator.selectOption({ value });");
+        sb.AppendLine("    else if (optionText) await locator.selectOption({ label: optionText });");
+        sb.AppendLine("  }");
+        sb.AppendLine();
+        sb.AppendLine("  private async scrollTo(x: number, y: number) {");
+        sb.AppendLine("    await this.page.evaluate(({ x, y }) => window.scrollTo(x, y), { x, y });");
+        sb.AppendLine("  }");
+        sb.AppendLine("}");
+        return sb.ToString();
+    }
+
     private static string GenerateTest(Recording rec, string baseName)
     {
         var sb = new StringBuilder();
@@ -309,6 +502,47 @@ public static class TestGeneratorService
         return sb.ToString();
     }
 
+    private static string GenerateTsTest(Recording rec, string baseName)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("import { test } from \"@playwright/test\";");
+        sb.AppendLine($"import {{ {baseName}Page }} from \"./{baseName}Page\";");
+        sb.AppendLine();
+        sb.AppendLine("test(\"Run recording\", async ({ page }) => {");
+        sb.AppendLine($"  const p = new {baseName}Page(page);");
+
+        var startUrl = GetStartUrl(rec);
+        if (!string.IsNullOrWhiteSpace(startUrl))
+        {
+            sb.AppendLine($"  await p.goTo(\"{Esc(startUrl)}\");");
+        }
+
+        sb.AppendLine();
+
+        var usedMethods = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        for (int i = 0; i < rec.Steps.Count; i++)
+        {
+            var step = rec.Steps[i];
+            var friendly = StepFriendlyName(step) ?? $"{step.Type}_{i + 1}";
+            var actionPrefix = step.Type switch
+            {
+                "click" => "Click",
+                "input" => "Input",
+                "select" => "Select",
+                "scroll" => "Scroll",
+                "navigate" => "Navigate",
+                "setViewport" => "Viewport",
+                _ => "Step"
+            };
+            var methodName = MakeUnique(usedMethods, actionPrefix + ToPascal(friendly));
+            sb.AppendLine($"  await p.{methodName}();");
+        }
+
+        sb.AppendLine("});");
+        return sb.ToString();
+    }
+
     private static Dictionary<int, string> BuildStepToLocatorFieldMap(Recording rec)
     {
         var map = new Dictionary<int, string>();
@@ -322,6 +556,26 @@ public static class TestGeneratorService
             var name = MakeUnique(used, ToPascal(StepFriendlyName(step) ?? $"{step.Type}_{i + 1}"));
             var loc = PickLocator(step);
             if (loc.Kind == LocatorKind.None) continue;
+
+            map[i] = name;
+        }
+
+        return map;
+    }
+
+    private static Dictionary<int, string> BuildStepToLocatorFieldMapTs(Recording rec)
+    {
+        var map = new Dictionary<int, string>();
+        var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        for (int i = 0; i < rec.Steps.Count; i++)
+        {
+            var step = rec.Steps[i];
+            if (!StepNeedsElement(step)) continue;
+
+            var name = MakeUnique(used, ToPascal(StepFriendlyName(step) ?? $"{step.Type}_{i + 1}"));
+            var selector = PickLocatorSelector(step);
+            if (string.IsNullOrWhiteSpace(selector)) continue;
 
             map[i] = name;
         }
@@ -380,6 +634,52 @@ public static class TestGeneratorService
         }
 
         return new LocatorPick(LocatorKind.None, "");
+    }
+
+    private static string? PickLocatorSelector(Step step)
+    {
+        if (step.Selectors == null)
+            return null;
+
+        foreach (var group in step.Selectors)
+        {
+            var s = group?.FirstOrDefault();
+            if (string.IsNullOrWhiteSpace(s)) continue;
+
+            if (s.StartsWith("xpath//", StringComparison.OrdinalIgnoreCase))
+            {
+                var xp = s.Substring("xpath".Length);
+                return "xpath=" + xp;
+            }
+
+            if (s.StartsWith("aria/", StringComparison.OrdinalIgnoreCase))
+            {
+                var label = s.Substring("aria/".Length);
+                return "aria/" + label;
+            }
+
+            if (s.StartsWith("text/", StringComparison.OrdinalIgnoreCase))
+            {
+                var text = s.Substring("text/".Length);
+                return "text=" + text;
+            }
+
+            if (s.StartsWith("pierce/", StringComparison.OrdinalIgnoreCase))
+            {
+                var css = s.Substring("pierce/".Length);
+                return "css=" + css;
+            }
+
+            if (s.StartsWith("css=", StringComparison.OrdinalIgnoreCase))
+            {
+                var css = s.Substring("css=".Length);
+                return "css=" + css;
+            }
+
+            return s;
+        }
+
+        return null;
     }
 
     private static string? StepFriendlyName(Step step)

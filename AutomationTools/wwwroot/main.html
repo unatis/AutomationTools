@@ -134,7 +134,7 @@
       <h1>Test generator</h1>
 
       <label>
-        Paste JSON body
+        Paste captured by Chrome Recorder JSON to generate code
         <textarea id="generatorJsonText" placeholder="Paste JSON here..."></textarea>
       </label>
 
@@ -146,7 +146,8 @@
       </div>
 
       <div class="actions">
-        <button id="genBtn">Generate ZIP</button>
+        <button id="genBtn">Generate C# ZIP</button>
+        <button id="genTsBtn">Generate TS ZIP</button>
       </div>
 
       <div class="status" id="genStatus"></div>
@@ -165,6 +166,7 @@
       const generatorJsonTextEl = document.getElementById("generatorJsonText");
       const generatorJsonFileEl = document.getElementById("generatorJsonFile");
       const genBtn = document.getElementById("genBtn");
+      const genTsBtn = document.getElementById("genTsBtn");
       const genStatusEl = document.getElementById("genStatus");
       const genResultEl = document.getElementById("genResult");
       const tabs = document.querySelectorAll(".tab-btn");
@@ -376,10 +378,61 @@
         }
       }
 
+      async function onGenerateTsZip() {
+        setGenStatus("");
+        setGenResult("");
+
+        const json = (await readGenBody()).trim();
+        if (!json) {
+          setGenStatus("Provide JSON in the textarea or choose a file.");
+          return;
+        }
+
+        try {
+          JSON.parse(json);
+        } catch (err) {
+          setGenStatus("Invalid JSON: " + err.message);
+          return;
+        }
+
+        const baseName = "Generated";
+        setGenStatus("Generating TS...");
+
+        try {
+          const resp = await fetch("/test-generator-ts", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ json, baseName })
+          });
+
+          if (!resp.ok) {
+            const msg = await resp.text();
+            setGenStatus("Error: " + resp.status + " " + resp.statusText);
+            setGenResult(msg);
+            return;
+          }
+
+          const blob = await resp.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = baseName + ".zip";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+
+          setGenStatus("TS ZIP ready.");
+        } catch (err) {
+          setGenStatus("Request failed: " + err.message);
+        }
+      }
+
       planIdEl.addEventListener("change", () => loadSuites(planIdEl.value));
       sendBtn.addEventListener("click", onSend);
       clearBtn.addEventListener("click", onClear);
       genBtn.addEventListener("click", onGenerateZip);
+      genTsBtn.addEventListener("click", onGenerateTsZip);
 
       loadPlans();
     </script>

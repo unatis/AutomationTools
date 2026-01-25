@@ -230,6 +230,41 @@ app.MapPost("/test-generator", async (HttpRequest req) =>
     }
 });
 
+app.MapPost("/test-generator-ts", async (HttpRequest req) =>
+{
+    using var doc = await JsonDocument.ParseAsync(req.Body);
+    var root = doc.RootElement;
+
+    if (root.ValueKind != JsonValueKind.Object)
+        return Results.BadRequest("Body must be JSON object.");
+
+    if (!root.TryGetProperty("json", out var jsonEl) || jsonEl.ValueKind != JsonValueKind.String)
+        return Results.BadRequest("Missing 'json' string.");
+
+    var json = jsonEl.GetString() ?? string.Empty;
+    if (string.IsNullOrWhiteSpace(json))
+        return Results.BadRequest("JSON payload is empty.");
+
+    var baseName = "Generated";
+    if (root.TryGetProperty("baseName", out var nameEl) && nameEl.ValueKind == JsonValueKind.String)
+    {
+        var candidate = nameEl.GetString();
+        if (!string.IsNullOrWhiteSpace(candidate))
+            baseName = candidate!.Trim();
+    }
+
+    try
+    {
+        var zipBytes = TestGeneratorService.GenerateZipFromJsonTs(json, baseName);
+        var fileName = $"{baseName}.zip";
+        return Results.File(zipBytes, "application/zip", fileName);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(ex.Message);
+    }
+});
+
 app.Run();
 
 public sealed record SyncFolderRequest(string AllureResultsPath, int? PlanId, int? SuiteId);

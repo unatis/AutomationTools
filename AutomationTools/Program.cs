@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using AutomationTools.Ado;
 using AutomationTools.Sync;
 using AutomationTools.Allure;
+using AutomationTools.Playwright;
 using AutomationTools.Recording;
 using AutomationTools.TestGenerator;
 using System.Text.Json;
@@ -27,6 +28,7 @@ builder.Services.AddHttpClient<AdoClient>((sp, http) =>
 
 builder.Services.AddSingleton<AllureToAdoSyncService>();
 builder.Services.AddSingleton<RecordingToAdoSyncService>();
+builder.Services.AddSingleton<PlaywrightJsonToAdoSyncService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -190,6 +192,46 @@ app.MapPost("/sync-folder", async ([FromBody] SyncFolderRequest request, AllureT
         suiteId: request.SuiteId,
         configurationId: null,
         apiVersions: null,
+        ct: ct);
+
+    return Results.Ok(summary);
+});
+
+// Sync from Playwright JSON report (results.json) sent in request body.
+// planId/suiteId/configurationId are provided via query string, e.g.:
+// POST /sync-playwright-json?planId=11937&suiteId=29357&configurationId=2
+app.MapPost("/sync-playwright-json", async (
+    HttpRequest http,
+    int? planId,
+    int? suiteId,
+    int? configurationId,
+    string? witApiVersion,
+    string? testPlanApiVersion,
+    string? testApiVersion,
+    PlaywrightJsonToAdoSyncService sync,
+    CancellationToken ct) =>
+{
+    using var doc = await JsonDocument.ParseAsync(http.Body, cancellationToken: ct);
+    if (doc.RootElement.ValueKind != JsonValueKind.Object)
+        return Results.BadRequest("Body must be a Playwright JSON report object.");
+
+    PlaywrightReport report;
+    try
+    {
+        var json = doc.RootElement.GetRawText();
+        report = sync.ParseReportJson(json);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest($"Failed to parse Playwright JSON: {ex.Message}");
+    }
+
+    var summary = await sync.SyncFromPlaywrightReport(
+        report: report,
+        planId: planId,
+        suiteId: suiteId,
+        configurationId: configurationId,
+        apiVersions: new ApiVersionOverrides(witApiVersion, testPlanApiVersion, testApiVersion),
         ct: ct);
 
     return Results.Ok(summary);

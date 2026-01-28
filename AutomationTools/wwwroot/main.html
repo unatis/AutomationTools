@@ -92,7 +92,7 @@
 
     <div id="sync-tab" class="tab-panel active">
       <h1>ADO Sync</h1>
-      <p>Send Allure JSON to <code>/sync</code> with planId and suiteId.</p>
+      <p>Send Allure or Playwright JSON with planId and suiteId.</p>
 
       <div class="row">
         <label>
@@ -111,7 +111,7 @@
 
       <label>
         Paste JSON body
-        <textarea id="jsonText" placeholder="Paste Allure result.json object or array here..."></textarea>
+        <textarea id="jsonText" placeholder="Paste Allure or Playwright JSON here..."></textarea>
       </label>
 
       <div class="row">
@@ -122,7 +122,7 @@
       </div>
 
       <div class="actions">
-        <button id="sendBtn">Send to /sync</button>
+        <button id="sendBtn">Send</button>
         <button id="clearBtn" class="secondary">Clear</button>
       </div>
 
@@ -268,6 +268,27 @@
         return generatorJsonTextEl.value;
       }
 
+      function detectSyncEndpoint(parsedJson) {
+        if (Array.isArray(parsedJson)) {
+          // Allure results.json is an array of test cases.
+          return "/sync";
+        }
+
+        if (parsedJson && typeof parsedJson === "object") {
+          if (Array.isArray(parsedJson.suites)) {
+            // Playwright JSON reporter root.
+            return "/sync-playwright-json";
+          }
+
+          // Some Allure exports wrap in {results:[...]}.
+          if (Array.isArray(parsedJson.results)) {
+            return "/sync";
+          }
+        }
+
+        return "/sync";
+      }
+
       async function onSend() {
         setStatus("");
         setResult("");
@@ -285,15 +306,17 @@
           return;
         }
 
+        let parsed;
         try {
-          JSON.parse(bodyText);
+          parsed = JSON.parse(bodyText);
         } catch (err) {
           setStatus("Invalid JSON: " + err.message);
           return;
         }
 
-        const url = `/sync?planId=${encodeURIComponent(planId)}&suiteId=${encodeURIComponent(suiteId)}`;
-        setStatus("Sending request...");
+        const endpoint = detectSyncEndpoint(parsed);
+        const url = `${endpoint}?planId=${encodeURIComponent(planId)}&suiteId=${encodeURIComponent(suiteId)}`;
+        setStatus(`Sending request to ${endpoint}...`);
 
         try {
           const response = await fetch(url, {

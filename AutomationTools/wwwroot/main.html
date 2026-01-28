@@ -91,43 +91,43 @@
     </div>
 
     <div id="sync-tab" class="tab-panel active">
-      <h1>ADO Sync</h1>
-      <p>Send Allure or Playwright JSON with planId and suiteId.</p>
+        <h1>ADO Sync</h1>
+        <p>Send Allure or Playwright JSON with planId and suiteId.</p>
+        <p>logic updates an existing Test Case by ID if the name starts with the numeric prefix 1234_.</p>
+        <div class="row">
+            <label>
+                planId
+                <select id="planId">
+                    <option value="">Loading plans...</option>
+                </select>
+            </label>
+            <label>
+                suiteId
+                <select id="suiteId">
+                    <option value="">Select plan first...</option>
+                </select>
+            </label>
+        </div>
 
-      <div class="row">
         <label>
-          planId
-          <select id="planId">
-            <option value="">Loading plans...</option>
-          </select>
+            Paste JSON body
+            <textarea id="jsonText" placeholder="Paste Allure or Playwright JSON here..."></textarea>
         </label>
-        <label>
-          suiteId
-          <select id="suiteId">
-            <option value="">Select plan first...</option>
-          </select>
-        </label>
-      </div>
 
-      <label>
-        Paste JSON body
-        <textarea id="jsonText" placeholder="Paste Allure or Playwright JSON here..."></textarea>
-      </label>
+        <div class="row">
+            <label>
+                Or choose JSON file
+                <input id="jsonFile" type="file" accept=".json,application/json" />
+            </label>
+        </div>
 
-      <div class="row">
-        <label>
-          Or choose JSON file
-          <input id="jsonFile" type="file" accept=".json,application/json" />
-        </label>
-      </div>
+        <div class="actions">
+            <button id="sendBtn">Send</button>
+            <button id="clearBtn" class="secondary">Clear</button>
+        </div>
 
-      <div class="actions">
-        <button id="sendBtn">Send</button>
-        <button id="clearBtn" class="secondary">Clear</button>
-      </div>
-
-      <div class="status" id="status"></div>
-      <div class="result" id="result"></div>
+        <div class="status" id="status"></div>
+        <div class="result" id="result"></div>
     </div>
 
     <div id="generator-tab" class="tab-panel">

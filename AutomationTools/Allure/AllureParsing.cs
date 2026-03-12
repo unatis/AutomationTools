@@ -24,8 +24,34 @@ public static class AllureParsing
     public static AllureResult ParseResultFile(string filePath)
     {
         var json = File.ReadAllText(filePath, Encoding.UTF8);
-        var result = JsonSerializer.Deserialize<AllureResult>(json, JsonOptions);
+        var result = ParseResultJson(json);
         return result ?? throw new InvalidOperationException($"Failed to parse Allure JSON: {filePath}");
+    }
+
+    public static AllureResult ParseResultJson(string json)
+    {
+        var result = JsonSerializer.Deserialize<AllureResult>(json, JsonOptions);
+        return result ?? throw new InvalidOperationException("Failed to parse Allure JSON.");
+    }
+
+    public static IReadOnlyList<string> ExtractTitles(IEnumerable<AllureResult> results)
+    {
+        var titles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var result in results)
+        {
+            var name = result.Name?.Trim();
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                titles.Add(name);
+                continue;
+            }
+
+            var fullName = result.FullName?.Trim();
+            if (!string.IsNullOrWhiteSpace(fullName))
+                titles.Add(fullName);
+        }
+
+        return titles.ToList();
     }
 
     public static bool TryParseTestCaseIdAndTitle(AllureResult result, out int testCaseId, out string title)

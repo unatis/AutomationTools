@@ -1,0 +1,69 @@
+{
+  "PlanId": 26809,
+  "TotalTests": 7,
+  "Suites": [
+    {
+      "SuiteId": 26810,
+      "Name": "ZeroTrace",
+      "Tests": []
+    },
+    {
+      "SuiteId": 26811,
+      "Name": "Coin Package",
+      "Tests": [
+        {
+          "WorkItemId": 26812,
+          "Title": "GetBlocksCount",
+          "Steps": "\u0026lt;div\u0026gt;\u0026lt;div\u0026gt;\u0026lt;p\u0026gt;getblockscount\u0026lt;/p\u0026gt;\u0026lt;/div\u0026gt;\u0026lt;/div\u0026gt; \u0026lt;p\u0026gt;26222707\u0026lt;/p\u0026gt; \u0026lt;div\u0026gt;\u0026lt;p\u0026gt;gettimestamp\u0026lt;/p\u0026gt;\u0026lt;/div\u0026gt; \u0026lt;p\u0026gt;2025-06-17 18:51:54\u0026lt;/p\u0026gt;"
+        },
+        {
+          "WorkItemId": 27080,
+          "Title": "GetBlocksCountNegative",
+          "Steps": "\u0026lt;div\u0026gt;\u0026lt;p\u0026gt;mock start with wrong value 26222708\u0026lt;/p\u0026gt;\u0026lt;/div\u0026gt; \u0026lt;div\u0026gt;\u0026lt;p\u0026gt;\u0026lt;br/\u0026gt;\u0026lt;/p\u0026gt;\u0026lt;/div\u0026gt; \u0026lt;div\u0026gt;\u0026lt;div\u0026gt;\u0026lt;p\u0026gt;getblockscount\u0026lt;/p\u0026gt;\u0026lt;/div\u0026gt;\u0026lt;/div\u0026gt; \u0026lt;div\u0026gt;\u0026lt;p\u0026gt;\u0026lt;br/\u0026gt;\u0026lt;/p\u0026gt;\u0026lt;/div\u0026gt; \u0026lt;div\u0026gt;\u0026lt;p\u0026gt;gettimestamp\u0026lt;/p\u0026gt;\u0026lt;/div\u0026gt; \u0026lt;p\u0026gt;exception \u0022the input does not contain any json tokens\u0022\u0026lt;/p\u0026gt;"
+        }
+      ]
+    },
+    {
+      "SuiteId": 29376,
+      "Name": "Tron Package",
+      "Tests": []
+    },
+    {
+      "SuiteId": 29381,
+      "Name": "Create Transaction",
+      "Tests": [
+        {
+          "WorkItemId": 29378,
+          "Title": "Duplicate tx id - Faild",
+          "Steps": "\u0026lt;div\u0026gt;\u0026lt;li\u0026gt;\u0026lt;p\u0026gt;create and sign a valid transaction from account a\u0026lt;/p\u0026gt;\u0026lt;br/\u0026gt;\u0026lt;/li\u0026gt;\u0026lt;/div\u0026gt; \u0026lt;div\u0026gt;\u0026lt;p\u0026gt;txid \u002B txhash\u0026lt;/p\u0026gt;\u0026lt;/div\u0026gt; \u0026lt;div\u0026gt;\u0026lt;p\u0026gt;broadcast the signed transaction to the tron network\u0026lt;/p\u0026gt;\u0026lt;/div\u0026gt; \u0026lt;div\u0026gt;\u0026lt;p\u0026gt;success\u0026lt;/p\u0026gt;\u0026lt;/div\u0026gt; \u0026lt;div\u0026gt;\u0026lt;p\u0026gt;verify that the broadcast request succeeds\u0026lt;/p\u0026gt;\u0026lt;li\u0026gt;\u0026lt;br/\u0026gt;\u0026lt;/li\u0026gt;\u0026lt;/div\u0026gt; \u0026lt;div\u0026gt;\u0026lt;p\u0026gt;success \u002B block number\u0026lt;/p\u0026gt;\u0026lt;/div\u0026gt; \u0026lt;div\u0026gt;\u0026lt;p\u0026gt;broadcast \u0026lt;strong\u0026gt;the same signed transaction again\u0026lt;/strong\u0026gt; (same tx id)\u0026lt;/p\u0026gt;\u0026lt;/div\u0026gt; \u0026lt;div\u0026gt;\u0026lt;p\u0026gt;faild\u0026lt;/p\u0026gt;\u0026lt;/div\u0026gt; \u0026lt;div\u0026gt;\u0026lt;p\u0026gt;\u0026lt;br/\u0026gt;\u0026lt;/p\u0026gt;\u0026lt;/div\u0026gt; \u0026lt;div\u0026gt;\u0026lt;p\u0026gt;\u0026lt;br/\u0026gt;\u0026lt;/p\u0026gt;\u0026lt;/div\u0026gt;"
+        },
+        {
+          "WorkItemId": 29379,
+          "Title": "Broadcast Expired Transaction - Faild",
+          "Steps": ""
+        },
+        {
+          "WorkItemId": 29380,
+          "Title": "Create \u0026 Broadcast Transaction That The Amount More Than Account Balance - Faild",
+          "Steps": "\u0026lt;div\u0026gt;\u0026lt;li\u0026gt;\u0026lt;p\u0026gt;query the current balance of account a\u0026lt;/p\u0026gt;\u0026lt;/li\u0026gt;\u0026lt;/div\u0026gt; \u0026lt;div\u0026gt;\u0026lt;p\u0026gt;bigger than 0\u0026lt;/p\u0026gt;\u0026lt;/div\u0026gt; \u0026lt;div\u0026gt;\u0026lt;li\u0026gt;\u0026lt;p\u0026gt;create a transaction with an amount \u0026lt;strong\u0026gt;greater than the available balance \u002B \u0026lt;/strong\u0026gt;sign the transaction with the correct private key\u0026lt;/p\u0026gt;\u0026lt;/li\u0026gt;\u0026lt;/div\u0026gt; \u0026lt;div\u0026gt;\u0026lt;p\u0026gt;txid and txhash\u0026lt;/p\u0026gt;\u0026lt;/div\u0026gt; \u0026lt;div\u0026gt;\u0026lt;p\u0026gt;broadcast the transaction to the network\u0026lt;/p\u0026gt;\u0026lt;/div\u0026gt; \u0026lt;div\u0026gt;\u0026lt;p\u0026gt;fail\u0026lt;/p\u0026gt;\u0026lt;/div\u0026gt; \u0026lt;div\u0026gt;\u0026lt;p\u0026gt;\u0026lt;br/\u0026gt;\u0026lt;/p\u0026gt;\u0026lt;/div\u0026gt; \u0026lt;div\u0026gt;\u0026lt;p\u0026gt;\u0026lt;br/\u0026gt;\u0026lt;/p\u0026gt;\u0026lt;/div\u0026gt;"
+        },
+        {
+          "WorkItemId": 29384,
+          "Title": "Transaction signed with wrong private key is rejected - Faild",
+          "Steps": "\u0026lt;div\u0026gt;\u0026lt;li\u0026gt;\u0026lt;p\u0026gt;create a transaction from account c\u0026lt;/p\u0026gt;\u0026lt;/li\u0026gt;\u0026lt;/div\u0026gt; \u0026lt;p\u0026gt;bigger than 0\u0026lt;/p\u0026gt; \u0026lt;div\u0026gt;\u0026lt;p\u0026gt;sign the transaction using a \u0026lt;strong\u0026gt;wrong private key\u0026lt;/strong\u0026gt;\u0026lt;/p\u0026gt;\u0026lt;/div\u0026gt; \u0026lt;p\u0026gt;return txid \u002B txhash\u0026lt;/p\u0026gt; \u0026lt;div\u0026gt;\u0026lt;p\u0026gt;broadcast the signed transaction to the network\u0026lt;/p\u0026gt;\u0026lt;/div\u0026gt; \u0026lt;p\u0026gt;fail\u0026lt;/p\u0026gt;"
+        }
+      ]
+    },
+    {
+      "SuiteId": 29382,
+      "Name": "Import \u0026 Export Blocks",
+      "Tests": [
+        {
+          "WorkItemId": 29383,
+          "Title": "Try To Import Corrupted Block Into The Offline Node - Faild",
+          "Steps": ""
+        }
+      ]
+    }
+  ]
+}

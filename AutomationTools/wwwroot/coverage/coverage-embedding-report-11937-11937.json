@@ -1,0 +1,1578 @@
+{
+  "PlanId": 11937,
+  "TeamId": "11937",
+  "TotalAdoTests": 206,
+  "TotalAllureTests": 127,
+  "MatchedTests": 104,
+  "CoveragePercent": 50.49,
+  "Model": "nomic-embed-text",
+  "MinScore": 0.6,
+  "TopK": 5,
+  "Matches": [
+    {
+      "WorkItemId": 6148,
+      "AdoTitle": "Update screens",
+      "AdoSuite": "6143 : UX: Integration with Ziva",
+      "AllureTitle": "Modelling_SaveTagWithAdditionalInfoSaveMidulsProcess_AdminUser_27253",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling_ContentWorld_AdminTests.Modelling_SaveTagWithAdditionalInfoSaveMidulsProcess_AdminUser_27253()",
+      "AllureUuid": "67a5271f-e8dc-46e5-8e61-9f37de27c3cd",
+      "Score": 0.6397139660902269
+    },
+    {
+      "WorkItemId": 799,
+      "AdoTitle": "UI manual test",
+      "AdoSuite": "Regression tests",
+      "AllureTitle": "Modelling_Select_View_Processed_Columns_25172",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_ViewTests.Modelling_Select_View_Processed_Columns_25172()",
+      "AllureUuid": "8c7f3a29-9e88-4b30-85db-7c9299cbd69a",
+      "Score": 0.6795788326324868
+    },
+    {
+      "WorkItemId": 4929,
+      "AdoTitle": "Counter bar fields",
+      "AdoSuite": "Tables screen",
+      "AllureTitle": "Column_Text_Sorting_25422(dbName)",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Search_Table_Page_Tests.Column_Text_Sorting_25422(BusinessCode:BusinessCode.Enums.SearchPage_TableColumns)",
+      "AllureUuid": "4a0c3011-b27a-4286-9bec-2c7f0b5a0f16",
+      "Score": 0.6581818530753196
+    },
+    {
+      "WorkItemId": 4932,
+      "AdoTitle": "Search bar fields",
+      "AdoSuite": "Tables screen",
+      "AllureTitle": "Column_Date_Filtering_25451(created)",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Search_Table_Page_Tests.Column_Date_Filtering_25451(BusinessCode:BusinessCode.Enums.SearchPage_TableColumns)",
+      "AllureUuid": "72ab9409-9fc8-4ec3-8ff2-9361dca1226a",
+      "Score": 0.6776172390964916
+    },
+    {
+      "WorkItemId": 4944,
+      "AdoTitle": "Sort columns field",
+      "AdoSuite": "Tables screen",
+      "AllureTitle": "Column_Text_Sorting_25422(tableName)",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Search_Table_Page_Tests.Column_Text_Sorting_25422(BusinessCode:BusinessCode.Enums.SearchPage_TableColumns)",
+      "AllureUuid": "0d222271-73d2-4e20-98dc-6eb612a37089",
+      "Score": 0.7207482339301805
+    },
+    {
+      "WorkItemId": 4945,
+      "AdoTitle": "Import general pool",
+      "AdoSuite": "Tables screen",
+      "AllureTitle": "GeneralForm_FillInFieldsWithExcelFolderSettingFile_UploadPool_26421",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Upload_Page_Tests.GeneralForm_FillInFieldsWithExcelFolderSettingFile_UploadPool_26421()",
+      "AllureUuid": "eea8da23-44b3-4296-abb5-5458b3dee7b1",
+      "Score": 0.6763186591745409
+    },
+    {
+      "WorkItemId": 4946,
+      "AdoTitle": "Export to excel icon",
+      "AdoSuite": "Tables screen",
+      "AllureTitle": "Modelling_Select_View_All_Tagged_NotTagged",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_ViewTests.Modelling_Select_View_All_Tagged_NotTagged()",
+      "AllureUuid": "809db9fd-1ac9-467b-8207-2ca20130f1f2",
+      "Score": 0.6268337201070722
+    },
+    {
+      "WorkItemId": 5335,
+      "AdoTitle": "Hamburger button ( three dots in the last column )",
+      "AdoSuite": "Tables screen",
+      "AllureTitle": "Modelling_Select_View_Selected_Columns_25190",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_ViewTests.Modelling_Select_View_Selected_Columns_25190()",
+      "AllureUuid": "0a133003-f1dd-4699-b470-1d72e823de3a",
+      "Score": 0.695664402365594
+    },
+    {
+      "WorkItemId": 3948,
+      "AdoTitle": "Check columns filters to looks like as it in table columns",
+      "AdoSuite": "Site",
+      "AllureTitle": "Column_Text_Finder_25364(dbName)",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Search_Table_Page_Tests.Column_Text_Finder_25364(BusinessCode:BusinessCode.Enums.SearchPage_TableColumns)",
+      "AllureUuid": "1f7b9eba-f16d-43c8-8118-d06f52f714e9",
+      "Score": 0.6271842885804517
+    },
+    {
+      "WorkItemId": 3958,
+      "AdoTitle": "Result without lon / lan remove link",
+      "AdoSuite": "Site",
+      "AllureTitle": "Column_Date_Sorting_25435(created)",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Search_Table_Page_Tests.Column_Date_Sorting_25435(BusinessCode:BusinessCode.Enums.SearchPage_TableColumns)",
+      "AllureUuid": "f64eb3b3-1f59-4be5-96ac-07e046a6add8",
+      "Score": 0.7306896335884971
+    },
+    {
+      "WorkItemId": 3959,
+      "AdoTitle": "Result screen - show history on map ",
+      "AdoSuite": "Site",
+      "AllureTitle": "SteelForm_FillInFields_UploadPool_26415",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Upload_Page_Tests.SteelForm_FillInFields_UploadPool_26415()",
+      "AllureUuid": "0369a071-d656-4da1-b7db-f2afb3ce0409",
+      "Score": 0.6624989129812775
+    },
+    {
+      "WorkItemId": 3960,
+      "AdoTitle": "Result screen - flags on country filter , refresh every 10 sec , text arrow is centralized ( grouping )",
+      "AdoSuite": "Site",
+      "AllureTitle": "Modelling_Select_View_All_Tagged_NotTagged_Detailed",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_ViewTests.Modelling_Select_View_All_Tagged_NotTagged_Detailed()",
+      "AllureUuid": "46dfeb95-7db3-4bdd-b1d7-862b312fbca3",
+      "Score": 0.6574358275230777
+    },
+    {
+      "WorkItemId": 5365,
+      "AdoTitle": "Testing API Gateway Infrastructure: Valid Request and Response (Status Code: 200)",
+      "AdoSuite": "Site",
+      "AllureTitle": "Work_Form_FillInFields_UploadPool_26418",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Upload_Page_Tests.Work_Form_FillInFields_UploadPool_26418()",
+      "AllureUuid": "c57ec6a1-e96e-42a4-9b9a-d2b4011670eb",
+      "Score": 0.6577228513269775
+    },
+    {
+      "WorkItemId": 3769,
+      "AdoTitle": "Load imsi name from imsi ImsiMetadata",
+      "AdoSuite": "Site",
+      "AllureTitle": "GeneralForm_FillInFieldsWithCsvFolderSettingFile_UploadPool_26420",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Upload_Page_Tests.GeneralForm_FillInFieldsWithCsvFolderSettingFile_UploadPool_26420()",
+      "AllureUuid": "3aebd7fc-27b6-4255-a8b0-2627677f5665",
+      "Score": 0.6243083922198593
+    },
+    {
+      "WorkItemId": 3771,
+      "AdoTitle": "Cancel cycle request",
+      "AdoSuite": "Site",
+      "AllureTitle": "Modelling_Select_View_Selected_Columns_Search_And_Reject",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_ViewTests.Modelling_Select_View_Selected_Columns_Search_And_Reject()",
+      "AllureUuid": "b44acb95-c53a-4b6f-8a45-b75da50bfa5b",
+      "Score": 0.6512742524710973
+    },
+    {
+      "WorkItemId": 3773,
+      "AdoTitle": "Show schedule info ",
+      "AdoSuite": "Site",
+      "AllureTitle": "Column_Date_Sorting_25435(updated)",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Search_Table_Page_Tests.Column_Date_Sorting_25435(BusinessCode:BusinessCode.Enums.SearchPage_TableColumns)",
+      "AllureUuid": "99d182d8-259d-4803-b1e7-4a7ebb9ca619",
+      "Score": 0.6386096855882215
+    },
+    {
+      "WorkItemId": 3774,
+      "AdoTitle": "Move Imsi group grid to tab \u002B add required fields \u002B new status",
+      "AdoSuite": "Site",
+      "AllureTitle": "ViewForm_MultiView_FillInFields_UploadPool_26416",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Upload_Page_Tests.ViewForm_MultiView_FillInFields_UploadPool_26416()",
+      "AllureUuid": "31facd30-e862-4a01-b1dc-ba6897933853",
+      "Score": 0.6728959618384067
+    },
+    {
+      "WorkItemId": 2873,
+      "AdoTitle": "Date operator",
+      "AdoSuite": "Site",
+      "AllureTitle": "Column_Date_Filtering_InRange_25877_PREVIOUS_DB_DATA_PROBLEM(created)",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Search_Table_Page_Tests.Column_Date_Filtering_InRange_25877_PREVIOUS_DB_DATA_PROBLEM(BusinessCode:BusinessCode.Enums.SearchPage_TableColumns)",
+      "AllureUuid": "80e9deec-6913-4bea-a8a6-0f92ab97750d",
+      "Score": 0.7374010845898482
+    },
+    {
+      "WorkItemId": 2880,
+      "AdoTitle": "Countries fields in DB",
+      "AdoSuite": "Site",
+      "AllureTitle": "Column_Text_Finder_25364(poolName)",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Search_Table_Page_Tests.Column_Text_Finder_25364(BusinessCode:BusinessCode.Enums.SearchPage_TableColumns)",
+      "AllureUuid": "0f62f636-edca-4580-8eea-e045d4ccb3b1",
+      "Score": 0.6584143974563688
+    },
+    {
+      "WorkItemId": 2879,
+      "AdoTitle": "Countries with flags",
+      "AdoSuite": "Site",
+      "AllureTitle": "Column_Date_Filtering_25451(updated)",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Search_Table_Page_Tests.Column_Date_Filtering_25451(BusinessCode:BusinessCode.Enums.SearchPage_TableColumns)",
+      "AllureUuid": "b9d7b9cf-8199-4990-8ff9-27c58f113785",
+      "Score": 0.6371337323860757
+    },
+    {
+      "WorkItemId": 2883,
+      "AdoTitle": " imsi name from imsi ImsiMetadata",
+      "AdoSuite": "Site",
+      "AllureTitle": "GeneralForm_FillInFieldsWithXMLSettingFile_UploadPool_26422",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Upload_Page_Tests.GeneralForm_FillInFieldsWithXMLSettingFile_UploadPool_26422()",
+      "AllureUuid": "fdd78c92-780d-4389-9948-7812679190b8",
+      "Score": 0.6379571812798268
+    },
+    {
+      "WorkItemId": 2887,
+      "AdoTitle": "edit / add imsi name - Backend check",
+      "AdoSuite": "Site",
+      "AllureTitle": "Column_Text_Sorting_25422(dbName)",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Search_Table_Page_Tests.Column_Text_Sorting_25422(BusinessCode:BusinessCode.Enums.SearchPage_TableColumns)",
+      "AllureUuid": "30c2ff9d-3e65-4d4b-8671-16b26298f3e1",
+      "Score": 0.6161104805500841
+    },
+    {
+      "WorkItemId": 2888,
+      "AdoTitle": "IMSI Aliases window",
+      "AdoSuite": "Site",
+      "AllureTitle": "Modelling_SaveTagProcess_SaveTagSaveMidulWithMandatoryColumn_AdminUser_25305",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling_ContentWorld_AdminTests.Modelling_SaveTagProcess_SaveTagSaveMidulWithMandatoryColumn_AdminUser_25305()",
+      "AllureUuid": "65d32854-eb21-4100-9b70-a7318b21fc25",
+      "Score": 0.6521526903528638
+    },
+    {
+      "WorkItemId": 2885,
+      "AdoTitle": "Update automation file with new fields",
+      "AdoSuite": "Automation test",
+      "AllureTitle": "Modelling_Automatic_labeling_no_overwrites_saved_field_25123",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_AutomaticLabelingTests.Modelling_Automatic_labeling_no_overwrites_saved_field_25123()",
+      "AllureUuid": "b2c4e592-dd6c-4893-9c3c-d21c6e670f2f",
+      "Score": 0.6894282197788719
+    },
+    {
+      "WorkItemId": 2210,
+      "AdoTitle": "Backend - Get all the history points",
+      "AdoSuite": "API",
+      "AllureTitle": "ViewForm_SingleView_FillInFields_UploadPool_26417",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Upload_Page_Tests.ViewForm_SingleView_FillInFields_UploadPool_26417()",
+      "AllureUuid": "460d6f36-7de9-4ab3-810a-ff1bf9ac70b9",
+      "Score": 0.6588107104544747
+    },
+    {
+      "WorkItemId": 2732,
+      "AdoTitle": "IMSI Aliases window",
+      "AdoSuite": "API",
+      "AllureTitle": "GeneralForm_FillInFieldsWithTestFolderFile_UploadPool_26413",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Upload_Page_Tests.GeneralForm_FillInFieldsWithTestFolderFile_UploadPool_26413()",
+      "AllureUuid": "0020b566-5283-4ec1-93ac-d71d96be0ae0",
+      "Score": 0.638812204529799
+    },
+    {
+      "WorkItemId": 2208,
+      "AdoTitle": "new pop-up with p-table and filter ",
+      "AdoSuite": "Site",
+      "AllureTitle": "Modelling_ContentWorldProcess_SaveMidulWithConditionOptionSaving_25300_PopupWindow",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling_ContentWorld_AdminTests.Modelling_ContentWorldProcess_SaveMidulWithConditionOptionSaving_25300_PopupWindow()",
+      "AllureUuid": "98509d66-0c8b-412c-8b6c-115e8412bf1c",
+      "Score": 0.6596531772885044
+    },
+    {
+      "WorkItemId": 789,
+      "AdoTitle": "Run create item integration test",
+      "AdoSuite": "Post",
+      "AllureTitle": "LoadingFromVIEW_Comboboxes_Items_Verification_26095",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Upload_Page_Tests.LoadingFromVIEW_Comboboxes_Items_Verification_26095()",
+      "AllureUuid": "15921578-f632-442d-ae46-da6482d73877",
+      "Score": 0.6404649953154546
+    },
+    {
+      "WorkItemId": 893,
+      "AdoTitle": "Manual Test - Drop New imsi file into folder (Failed to load Json File)",
+      "AdoSuite": "Merge",
+      "AllureTitle": "GeneralForm_FillInFieldsWithJsonSettingFile_UploadPool_26414",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Upload_Page_Tests.GeneralForm_FillInFieldsWithJsonSettingFile_UploadPool_26414()",
+      "AllureUuid": "96241b2e-fa9c-413e-925c-4659f6eb0f22",
+      "Score": 0.6247665152560842
+    },
+    {
+      "WorkItemId": 1227,
+      "AdoTitle": "Nlog functionalty",
+      "AdoSuite": "Merge",
+      "AllureTitle": "Modelling_Preview_OnlyStrings_OnlyYellow_30042",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_UDF_PreviewTests.Modelling_Preview_OnlyStrings_OnlyYellow_30042()",
+      "AllureUuid": "05ae987d-0be9-456a-b8e2-d57116cc476c",
+      "Score": 0.6678834215745795
+    },
+    {
+      "WorkItemId": 834,
+      "AdoTitle": "Status column in table",
+      "AdoSuite": "Imsi tables",
+      "AllureTitle": "Modelling_ConditionProcess_26485",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_ConditionTests.Modelling_ConditionProcess_26485()",
+      "AllureUuid": "be15eb28-547b-42b1-8e18-0efb98b42645",
+      "Score": 0.6804119610641459
+    },
+    {
+      "WorkItemId": 888,
+      "AdoTitle": "Pagination area",
+      "AdoSuite": "Imsi tables",
+      "AllureTitle": "Modelling_DisplayOfSelectedColumnsWhenTheyAreNotVisibleInTheCurrentTableView_30062",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_UDF_PreviewTests.Modelling_DisplayOfSelectedColumnsWhenTheyAreNotVisibleInTheCurrentTableView_30062()",
+      "AllureUuid": "ed5a9ea9-8d38-4eca-9c55-b62f800f24f9",
+      "Score": 0.602250650053918
+    },
+    {
+      "WorkItemId": 1224,
+      "AdoTitle": "Result column",
+      "AdoSuite": "Imsi tables",
+      "AllureTitle": "Column_Text_Finder_25364(tableName)",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Search_Table_Page_Tests.Column_Text_Finder_25364(BusinessCode:BusinessCode.Enums.SearchPage_TableColumns)",
+      "AllureUuid": "c47ba094-fc2b-4b36-9ca2-3206b45db859",
+      "Score": 0.6174299027594259
+    },
+    {
+      "WorkItemId": 1225,
+      "AdoTitle": "Execute date",
+      "AdoSuite": "Imsi tables",
+      "AllureTitle": "Column_Date_Filtering_InRange_25877_PREVIOUS_DB_DATA_PROBLEM(updated)",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Search_Table_Page_Tests.Column_Date_Filtering_InRange_25877_PREVIOUS_DB_DATA_PROBLEM(BusinessCode:BusinessCode.Enums.SearchPage_TableColumns)",
+      "AllureUuid": "05aece59-0687-4234-b442-85c4163d434d",
+      "Score": 0.675454597042517
+    },
+    {
+      "WorkItemId": 1689,
+      "AdoTitle": "Automation integration test - Inf.Gis.Scheduler -check Timeout request",
+      "AdoSuite": "Automation",
+      "AllureTitle": "LoadDelta_CompleteFlow_SelectAndSubmit_29172",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_TableMenuTests.LoadDelta_CompleteFlow_SelectAndSubmit_29172()",
+      "AllureUuid": "a04787b6-6a40-482d-9a75-1b424fdcdbb6",
+      "Score": 0.6168583914965211
+    },
+    {
+      "WorkItemId": 292,
+      "AdoTitle": "Main screen Results - Result Description column",
+      "AdoSuite": "Car Location screen",
+      "AllureTitle": "Column_Text_Finder_25364(userName)",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Search_Table_Page_Tests.Column_Text_Finder_25364(BusinessCode:BusinessCode.Enums.SearchPage_TableColumns)",
+      "AllureUuid": "378a1dcb-e1bd-48d3-a079-395787417f32",
+      "Score": 0.6405433775343852
+    },
+    {
+      "WorkItemId": 24676,
+      "AdoTitle": "Request with malformed token is rejected \u05D1\u05E7\u05E9\u05D4 \u05E2\u05DD\u05D8\u05D5\u05E7\u05DF  \u05E9\u05D2\u05D9\u05D0\u05D4 \u05E0\u05D3\u05D7\u05EA",
+      "AdoSuite": "\u05E4\u05EA\u05D9\u05D7\u05EA \u05DE\u05E1\u05DA \u05DC\u05D5\u05D2 \u05D0\u05D9\u05DF",
+      "AllureTitle": "FrameDetails_Insert_VerfiyFileds_28924",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Search_Table_Page_Tests.FrameDetails_Insert_VerfiyFileds_28924()",
+      "AllureUuid": "55b0c90f-7667-4b70-b167-1b13cd9e3013",
+      "Score": 0.6284204489562768
+    },
+    {
+      "WorkItemId": 24696,
+      "AdoTitle": "Login screen is skipped when token is valid on first load",
+      "AdoSuite": "\u05E4\u05EA\u05D9\u05D7\u05EA \u05DE\u05E1\u05DA \u05DC\u05D5\u05D2 \u05D0\u05D9\u05DF",
+      "AllureTitle": "Modelling_VerifySplitProcess_AllPopUpFieldsShown_29278",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling_SplitTests.Modelling_VerifySplitProcess_AllPopUpFieldsShown_29278()",
+      "AllureUuid": "8e05b253-ec64-4f9c-af40-e21dd3c919ac",
+      "Score": 0.6521809456379479
+    },
+    {
+      "WorkItemId": 24698,
+      "AdoTitle": "Audit log records each 401 event",
+      "AdoSuite": "\u05E4\u05EA\u05D9\u05D7\u05EA \u05DE\u05E1\u05DA \u05DC\u05D5\u05D2 \u05D0\u05D9\u05DF",
+      "AllureTitle": "Modelling_VerifySplitProcessWithNumbersLocationSeperator_AllPopUpFieldsShown_29278",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling_SplitTests.Modelling_VerifySplitProcessWithNumbersLocationSeperator_AllPopUpFieldsShown_29278()",
+      "AllureUuid": "5d22c00d-1fbb-4d85-82a0-1b6fdb6d75e4",
+      "Score": 0.6258571589923534
+    },
+    {
+      "WorkItemId": 24699,
+      "AdoTitle": "Preliminary token is never reused once final JWT arrives",
+      "AdoSuite": "\u05E4\u05EA\u05D9\u05D7\u05EA \u05DE\u05E1\u05DA \u05DC\u05D5\u05D2 \u05D0\u05D9\u05DF",
+      "AllureTitle": "Steel_Form_Comboboxes_Items_Verification_26108",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Upload_Page_Tests.Steel_Form_Comboboxes_Items_Verification_26108()",
+      "AllureUuid": "008b8156-2a6b-4eae-868d-20715aae2b88",
+      "Score": 0.6371831200164308
+    },
+    {
+      "WorkItemId": 25123,
+      "AdoTitle": "Automatic labeling no overwrites saved field \u05EA\u05D9\u05D5\u05D2 \u05D0\u05D5\u05D8\u05D5\u05DE\u05D8\u05D9 \u05DC\u05DC\u05D0 \u05D4\u05D7\u05DC\u05E4\u05D5\u05EA \u05E9\u05DC \u05E9\u05D3\u05D4 \u05E9\u05DE\u05D5\u05E8",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_ContentWorldProcess_SaveDraftMidulWithoutMendetoryField_NegetiveTest_PowerUser_25288",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_ContentWorld_PowerUserTests.Modelling_ContentWorldProcess_SaveDraftMidulWithoutMendetoryField_NegetiveTest_PowerUser_25288()",
+      "AllureUuid": "deae3608-7235-466d-877f-15b0f72a56ab",
+      "Score": 0.738559455992629
+    },
+    {
+      "WorkItemId": 25196,
+      "AdoTitle": "Column advanced filter combo items verification \u05D0\u05D9\u05DE\u05D5\u05EA \u05E4\u05E8\u05D9\u05D8\u05D9 \u05E9\u05D9\u05DC\u05D5\u05D1 \u05E9\u05DC \u05E1\u05D9\u05E0\u05D5\u05DF \u05DE\u05EA\u05E7\u05D3\u05DD \u05D1\u05E2\u05DE\u05D5\u05D3\u05D4",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_Column_Advanced_Filter_Combo_Items_Verification",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_AdvancedFilterTests.Modelling_Column_Advanced_Filter_Combo_Items_Verification()",
+      "AllureUuid": "6523aaad-50cb-4f13-9368-9a2b1cdf5670",
+      "Score": 0.7953615424768028
+    },
+    {
+      "WorkItemId": 25226,
+      "AdoTitle": "Advanced Filter Combo Dynamic Data Saving \u05E9\u05D9\u05DC\u05D5\u05D1 \u05DE\u05E1\u05E0\u05E0\u05D9\u05DD \u05DE\u05EA\u05E7\u05D3\u05DD \u05E9\u05DE\u05D9\u05E8\u05EA \u05E0\u05EA\u05D5\u05E0\u05D9\u05DD \u05D3\u05D9\u05E0\u05DE\u05D9\u05EA",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_ContentWorldProcess_SaveMidulWithConditionOptionSavingSQL_25301_PopupWindow",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_PreviewTableSettingsTests.Modelling_ContentWorldProcess_SaveMidulWithConditionOptionSavingSQL_25301_PopupWindow()",
+      "AllureUuid": "db3a283a-4618-4269-be11-94088ece7e4b",
+      "Score": 0.7176083347492401
+    },
+    {
+      "WorkItemId": 25233,
+      "AdoTitle": "Preview button and popup loaded as well \u05DB\u05E4\u05EA\u05D5\u05E8 \u05D4\u05EA\u05E6\u05D5\u05D2\u05D4 \u05D4\u05DE\u05E7\u05D3\u05D9\u05DE\u05D4 \u05D5\u05D4\u05D7\u05DC\u05D5\u05DF \u05D4\u05E7\u05D5\u05E4\u05E5 \u05E0\u05D8\u05E2\u05E0\u05D5 \u05D2\u05DD \u05DB\u05DF",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_Preview_Button_And_Popup_Loaded_As_Well_25226",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_TopMenuTests.Modelling_Preview_Button_And_Popup_Loaded_As_Well_25226()",
+      "AllureUuid": "df03da16-186b-4609-adcf-aed22f9f54e1",
+      "Score": 0.8614894013113599
+    },
+    {
+      "WorkItemId": 25254,
+      "AdoTitle": "Top Menu Content World Button Is Established \u05D1\u05D3\u05D9\u05E7\u05EA \u05EA\u05E7\u05D9\u05E0\u05D5\u05EA \u05DB\u05E4\u05EA\u05D5\u05E8 \u05E4\u05EA\u05D9\u05D7\u05EA \u05E4\u05E0\u05D0\u05DC \u05E2\u05D5\u05DC\u05DE\u05D5\u05EA \u05DE\u05D9\u05D3\u05E2",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_TopMenu_ContentWorldButtonIsEstablished",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_TopMenuTests.Modelling_TopMenu_ContentWorldButtonIsEstablished()",
+      "AllureUuid": "4dc7b184-3498-424f-b5d1-76a25be0cd8f",
+      "Score": 0.7425486030923594
+    },
+    {
+      "WorkItemId": 25255,
+      "AdoTitle": "top menu CONCATENATION process button is established - \u05D1\u05D3\u05D9\u05E7\u05EA \u05EA\u05E7\u05D9\u05E0\u05D5\u05EA \u05DB\u05E4\u05EA\u05D5\u05E8 \u05E4\u05EA\u05D9\u05D7\u05EA \u05E4\u05E0\u05D0\u05DC \u05E9\u05E8\u05E9\u05D5\u05E8",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_TopMenu_ConcatenationButtonIsEstablished_25255",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Concatenation.Modelling_ConcatenationTests.Modelling_TopMenu_ConcatenationButtonIsEstablished_25255()",
+      "AllureUuid": "7ade073f-3623-49f0-b37d-e195ef83c1dd",
+      "Score": 0.794908359625083
+    },
+    {
+      "WorkItemId": 25256,
+      "AdoTitle": "Top menu Split process button is established - \u05D1\u05D3\u05D9\u05E7\u05EA \u05EA\u05E7\u05D9\u05E0\u05D5\u05EA \u05DB\u05E4\u05EA\u05D5\u05E8 \u05E4\u05EA\u05D9\u05D7\u05EA \u05E4\u05E0\u05D0\u05DC \u05E4\u05D9\u05E6\u05D5\u05DC",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_TopMenu_SplitProcessButtonIsEstablished",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling_SplitTests.Modelling_TopMenu_SplitProcessButtonIsEstablished()",
+      "AllureUuid": "3daed854-9e8e-4636-8d26-2eb510717d39",
+      "Score": 0.7707716300968741
+    },
+    {
+      "WorkItemId": 25257,
+      "AdoTitle": "top menu Replace process button is established - \u05D1\u05D3\u05D9\u05E7\u05EA \u05EA\u05E7\u05D9\u05E0\u05D5\u05EA \u05DB\u05E4\u05EA\u05D5\u05E8 \u05E4\u05EA\u05D9\u05D7\u05EA \u05E4\u05E0\u05D0\u05DC \u05D4\u05D7\u05DC\u05E3",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_TopMenu_ReplaceButtonIsEstablished_25257",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_TopMenuTests.Modelling_TopMenu_ReplaceButtonIsEstablished_25257()",
+      "AllureUuid": "1ac742dc-efdf-4810-87c7-5c883a0b93d8",
+      "Score": 0.769147600859398
+    },
+    {
+      "WorkItemId": 25258,
+      "AdoTitle": "top menu Conditions process button is established - \u05D1\u05D3\u05D9\u05E7\u05EA \u05EA\u05E7\u05D9\u05E0\u05D5\u05EA \u05DB\u05E4\u05EA\u05D5\u05E8 \u05E4\u05EA\u05D9\u05D7\u05EA \u05E4\u05E0\u05D0\u05DC \u05EA\u05E0\u05D0\u05D9\u05DD",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_TopMenu_ConditionsButtonIsEstablished",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_TopMenuTests.Modelling_TopMenu_ConditionsButtonIsEstablished()",
+      "AllureUuid": "296fdcff-efb4-4a7d-bb81-486e6b7d276c",
+      "Score": 0.7893766321746796
+    },
+    {
+      "WorkItemId": 25259,
+      "AdoTitle": "Top menu SQL process button is established - \u05D1\u05D3\u05D9\u05E7\u05EA \u05EA\u05E7\u05D9\u05E0\u05D5\u05EA \u05DB\u05E4\u05EA\u05D5\u05E8 \u05E4\u05EA\u05D9\u05D7\u05EA \u05E4\u05E0\u05D0\u05DC SQL",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_TopMenu_SQLButtonIsEstablished",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_TopMenuTests.Modelling_TopMenu_SQLButtonIsEstablished()",
+      "AllureUuid": "8c6bb15d-2149-4a0a-bf63-2e1fe0935964",
+      "Score": 0.7910433008362077
+    },
+    {
+      "WorkItemId": 25261,
+      "AdoTitle": "Top menu items Table, SelectView ,AutomaticLabeling , Preview are established \u05D1\u05D3\u05D9\u05E7\u05EA \u05EA\u05E7\u05D9\u05E0\u05D5\u05EA \u05DB\u05E4\u05EA\u05D5\u05E8\u05D9 \u05EA\u05E6\u05D5\u05D2\u05D4 \u05D8\u05D1\u05DC\u05D4 \u05EA\u05D9\u05D5\u05D2 \u05D0\u05D5\u05D8\u05D5\u05DE\u05D8\u05D9",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_TopMenu_ItemsAreEstablished",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_TopMenuTests.Modelling_TopMenu_ItemsAreEstablished()",
+      "AllureUuid": "d7babffe-fb0d-4102-947e-2bd5182d706f",
+      "Score": 0.7481416533713237
+    },
+    {
+      "WorkItemId": 25262,
+      "AdoTitle": "Add Concatenation process, fill in all fields, press save, close panel - \u05E4\u05D0\u05E0\u05DC \u05E9\u05E8\u05E9\u05D5\u05E8 \u05D4\u05D5\u05E1\u05E4\u05EA \u05E4\u05D0\u05E0\u05DC",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_ConcatenationProcess_VerifyAllPopUpFieldsShown_26483",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Concatenation.Modelling_ConcatenationTests.Modelling_ConcatenationProcess_VerifyAllPopUpFieldsShown_26483()",
+      "AllureUuid": "827e1f2b-9c65-466b-903e-e57165380216",
+      "Score": 0.7937189301780769
+    },
+    {
+      "WorkItemId": 25285,
+      "AdoTitle": "ContentWorld process (insurance) Delete save draft try Save Midul Without Saving Tag NegetiveTesT 25285",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_ContentWorldProcess_SaveMidulWithSubCategory_25292",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling_ContentWorld_AdminTests.Modelling_ContentWorldProcess_SaveMidulWithSubCategory_25292()",
+      "AllureUuid": "a3501447-39db-407d-8439-eb5d4a536dac",
+      "Score": 0.8090304712063698
+    },
+    {
+      "WorkItemId": 25286,
+      "AdoTitle": "ContentWorld process (Sport) save tag draft try Save Midul  NegetiveTesT",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_ContentWorldProcess_SaveMidulSaveMidulDraftWithoutSavingTag_NegetiveTest_PowerUser_25285",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_ContentWorld_PowerUserTests.Modelling_ContentWorldProcess_SaveMidulSaveMidulDraftWithoutSavingTag_NegetiveTest_PowerUser_25285()",
+      "AllureUuid": "e6c71032-4c89-485c-be97-36250e5c0ff7",
+      "Score": 0.7934187864563569
+    },
+    {
+      "WorkItemId": 25260,
+      "AdoTitle": "Top menu Save buttons items are established - \u05D1\u05D3\u05D9\u05E7\u05EA \u05EA\u05E7\u05D9\u05E0\u05D5\u05EA \u05DB\u05E4\u05EA\u05D5\u05E8\u05D9 \u05E4\u05EA\u05D9\u05D7\u05EA \u05E4\u05E0\u05D0\u05DC \u05E9\u05DE\u05D9\u05E8\u05D4",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_SaveButtons_MenuButtons_AreEstablished",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_TopMenuTests.Modelling_SaveButtons_MenuButtons_AreEstablished()",
+      "AllureUuid": "c70c48c9-d89c-41ba-8a5a-447a91273811",
+      "Score": 0.7366051228605386
+    },
+    {
+      "WorkItemId": 25287,
+      "AdoTitle": "ContentWorld process (insurance) Delete save draft try to save midul  \u05E2\u05D5\u05DC\u05DE\u05D5\u05EA \u05DE\u05D9\u05D3\u05E2 \u05DE\u05D7\u05E7 \u05EA\u05D9\u05D5\u05D2 \u05D8\u05D9\u05D5\u05D8\u05D0 \u05D5\u05E0\u05E1\u05D4 \u05DC\u05E9\u05DE\u05D5\u05E8 \u05DE\u05D9\u05D3\u05D5\u05DC",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_ContentWorldProcess_DeleteMidul_25290",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling_ContentWorld_AdminTests.Modelling_ContentWorldProcess_DeleteMidul_25290()",
+      "AllureUuid": "363f7404-2fc8-4976-bda9-735fce4ea5eb",
+      "Score": 0.8056965180682312
+    },
+    {
+      "WorkItemId": 25288,
+      "AdoTitle": "Modelling_ContentWorldProcess_SaveDraftMidulWithoutMendetoryField_NegetiveTest_PowerUser (sport)   \u05D1\u05D3\u05D9\u05E7\u05D4 \u05E9\u05DC\u05D9\u05DC\u05D9\u05EA \u05E2\u05D5\u05DC\u05DE\u05D5\u05EA \u05DE\u05D9\u05D3\u05E2 \u05E9\u05DE\u05D9\u05E8\u05EA \u05D8\u05D9\u05D5\u05D8\u05EA  \u05DE\u05D9\u05D3\u05D5\u05DC \u05DC\u05DC\u05D0 \u05E9\u05D3\u05D4 \u05D7\u05D5\u05D1\u05D4",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_ContentWorldProcess_SaveDraftSaveMidul_NegetiveTest_PowerUser_25286",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_ContentWorld_PowerUserTests.Modelling_ContentWorldProcess_SaveDraftSaveMidul_NegetiveTest_PowerUser_25286()",
+      "AllureUuid": "568054d1-1a67-41e0-ad56-b29bb0f156ef",
+      "Score": 0.8248265096307463
+    },
+    {
+      "WorkItemId": 25289,
+      "AdoTitle": "Save draft save draft midul with mandatory field is filled",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_SaveTagProcessWithoutSavingAnyColumn_AdminUser_NegetiveTest_25304",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling_ContentWorld_AdminTests.Modelling_SaveTagProcessWithoutSavingAnyColumn_AdminUser_NegetiveTest_25304()",
+      "AllureUuid": "b147bdf6-f9d1-409c-8ae8-cd24fed2bffc",
+      "Score": 0.6660455672060124
+    },
+    {
+      "WorkItemId": 25290,
+      "AdoTitle": "ContentWorld process (insurance) fill in mandatory field and save draft \u0026 midul \u05E2\u05D5\u05DC\u05DE\u05D5\u05EA \u05DE\u05D9\u05D3\u05E2 \u05E9\u05DE\u05D9\u05E8\u05EA \u05D8\u05D9\u05D5\u05D8\u05EA \u05DE\u05D9\u05D3\u05D5\u05DC \u05D5\u05E9\u05DE\u05D9\u05E8\u05EA \u05DE\u05D9\u05D3\u05D5\u05DC \u05E2\u05DD \u05E9\u05D3\u05D5\u05EA \u05D7\u05D5\u05D1\u05D4",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_ContentWorldProcess_SaveMidulWithUdf_25295",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling_ContentWorld_AdminTests.Modelling_ContentWorldProcess_SaveMidulWithUdf_25295()",
+      "AllureUuid": "6bf940a6-e435-480b-a776-6d9a8647e8c5",
+      "Score": 0.788556109896291
+    },
+    {
+      "WorkItemId": 25291,
+      "AdoTitle": "Modelling_ContentWorldProcess_VerifyAllPopUpFieldsInSaveMidul \u05D1\u05D3\u05D9\u05E7\u05EA \u05D4\u05E0\u05EA\u05D5\u05E0\u05D9\u05DD \u05E2\u05D5\u05DC\u05DD \u05D1\u05D9\u05D8\u05D5\u05D7 \u05DC\u05D0\u05D7\u05E8 \u05DE\u05D9\u05D3\u05D5\u05DC",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_ContentWorldProcess_VerifyAllPopUpFieldsInSaveDraft_25299",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling_ContentWorld_AdminTests.Modelling_ContentWorldProcess_VerifyAllPopUpFieldsInSaveDraft_25299()",
+      "AllureUuid": "f71dce89-77ad-47b8-9d64-9e2373cb9375",
+      "Score": 0.8373068016979222
+    },
+    {
+      "WorkItemId": 25292,
+      "AdoTitle": "ContentWorld process (\u05E8\u05E9\u05EA\u05D5\u05EA \u05D7\u05D1\u05E8\u05EA\u05D9\u05D5\u05EA) fill in mandatory fields and Save Midul With SubCategory",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_ContentWorldProcess_FillInMandatoryField_PowerUser_25941",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_ContentWorld_PowerUserTests.Modelling_ContentWorldProcess_FillInMandatoryField_PowerUser_25941()",
+      "AllureUuid": "2d0b4636-8b3f-4bac-a012-5b91e3372c43",
+      "Score": 0.8379098886954353
+    },
+    {
+      "WorkItemId": 25293,
+      "AdoTitle": "ContentWorld process (\u05E8\u05E9\u05EA\u05D5\u05EA \u05D7\u05D1\u05E8\u05EA\u05D9\u05D5\u05EA) SaveMidulWithoutSubCategoryfield_NegetiveTest \u05D8\u05E1\u05D8 \u05E9\u05DC\u05D9\u05DC\u05D9 \u05E0\u05D9\u05E1\u05D9\u05D5\u05DF \u05E9\u05DE\u05D9\u05E8\u05EA \u05DE\u05D9\u05D3\u05D5\u05DC \u05DC\u05DC\u05D0 \u05DE\u05D9\u05DC\u05D5\u05D9 \u05EA\u05EA \u05E7\u05D8\u05D2\u05D5\u05E8\u05D9\u05D4",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_ContentWorldProcess_DeleteSaveDraftSaveMidul_NegetiveTest_PowerUser_25287",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_ContentWorld_PowerUserTests.Modelling_ContentWorldProcess_DeleteSaveDraftSaveMidul_NegetiveTest_PowerUser_25287()",
+      "AllureUuid": "af719d62-8e29-4be0-aabe-d7ad9079c406",
+      "Score": 0.7822765396527984
+    },
+    {
+      "WorkItemId": 25294,
+      "AdoTitle": "ContentWorldProcess_MinimizeWindowSaveTag \u05E2\u05D5\u05DC\u05DE\u05D5\u05EA \u05DE\u05D9\u05D3\u05E2 \u05D4\u05E7\u05D8\u05DF \u05D7\u05DC\u05D5\u05DF \u05D5\u05E9\u05DE\u05D5\u05E8 \u05EA\u05D9\u05D5\u05D2",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_ContentWorldProcess_MinimizeWindowSaveTag_25294",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling_ContentWorld_AdminTests.Modelling_ContentWorldProcess_MinimizeWindowSaveTag_25294()",
+      "AllureUuid": "88a8fb20-b776-4839-9ae4-501b1829af76",
+      "Score": 0.844344268903896
+    },
+    {
+      "WorkItemId": 25296,
+      "AdoTitle": "ContentWorld process (insurance) Add row in midul \u0026 save draft \u05D4\u05D5\u05E1\u05E4\u05EA \u05E9\u05D5\u05E8\u05D4 \u05E2\u05D5\u05DC\u05DD \u05DE\u05D9\u05D3\u05E2 \u05D1\u05D9\u05D8\u05D5\u05D7 \u05D5\u05E9\u05DE\u05D9\u05E8\u05EA \u05D8\u05D9\u05D5\u05D8\u05D0",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_ContentWorldProcess_SaveMidulWithConditionOptionSaving_25300_PopupWindow",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_PreviewTableSettingsTests.Modelling_ContentWorldProcess_SaveMidulWithConditionOptionSaving_25300_PopupWindow()",
+      "AllureUuid": "e2904806-2b3b-4df1-9e76-c8589f27eb8b",
+      "Score": 0.7893442945218965
+    },
+    {
+      "WorkItemId": 25297,
+      "AdoTitle": "SAve tagg open midul Add row and then delete the added row that without saving \u05E2\u05D5\u05DC\u05DD \u05DE\u05D9\u05D3\u05E2 \u05D1\u05D9\u05D8\u05D5\u05D7 \u05D4\u05D5\u05E1\u05E4\u05EA \u05E9\u05D5\u05E8\u05D4 \u05D5\u05DE\u05D7\u05D9\u05E7\u05EA\u05D4",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_ContentWorldProcess_DeleteAddedRowInPopUpField_25297",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling_ContentWorld_AdminTests.Modelling_ContentWorldProcess_DeleteAddedRowInPopUpField_25297()",
+      "AllureUuid": "1544ce60-16b5-4872-bac5-bbb639a58d38",
+      "Score": 0.7482664186375043
+    },
+    {
+      "WorkItemId": 25298,
+      "AdoTitle": "save tagg open midul edit some rows that filled before and save midul draft",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_SaveTagButton_VerifyDisableSaveTagAndUpdateTagProcess_PowerUser_25943",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_ContentWorld_PowerUserTests.Modelling_SaveTagButton_VerifyDisableSaveTagAndUpdateTagProcess_PowerUser_25943()",
+      "AllureUuid": "abc92cf1-bbce-4321-8a53-af3636159073",
+      "Score": 0.6724214981857699
+    },
+    {
+      "WorkItemId": 25299,
+      "AdoTitle": "Modelling_ContentWorldProcess_VerifyAllPopUpFieldsInSaveDraft \u05E2\u05D5\u05DC\u05DE\u05D5\u05EA \u05DE\u05D9\u05D3\u05E2 \u05D5\u05D5\u05D3\u05D0 \u05E9\u05D3\u05D5\u05EA \u05D7\u05D5\u05D1\u05D4 \u05D5\u05E9\u05DE\u05D5\u05E8 \u05D8\u05D9\u05D5\u05D8\u05D0 \u05D1\u05E2\u05D5\u05DC\u05DD \u05D1\u05D9\u05D8\u05D5\u05D7",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_ContentWorldProcess_VerifyAllPopUpFieldsInSaveMidul_25291",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling_ContentWorld_AdminTests.Modelling_ContentWorldProcess_VerifyAllPopUpFieldsInSaveMidul_25291()",
+      "AllureUuid": "d055bd79-4f78-4c8d-a03e-382806aec8de",
+      "Score": 0.8548631622615375
+    },
+    {
+      "WorkItemId": 25302,
+      "AdoTitle": "Modelling_ContentWorldProcess_DeleteSaveTagAndSaveMidul \u05DE\u05D7\u05D9\u05E7\u05EA \u05EA\u05D9\u05D5\u05D2 \u05DE\u05D7\u05D9\u05E7\u05EA \u05DE\u05D9\u05D3\u05D5\u05DC \u05D5\u05D5\u05D5\u05D9\u05D3\u05D5\u05D0",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_ContentWorldProcess_DeleteSaveTagAndSaveMidul_25302",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling_ContentWorld_AdminTests.Modelling_ContentWorldProcess_DeleteSaveTagAndSaveMidul_25302()",
+      "AllureUuid": "59bb89b7-c408-4a2b-b61f-c107e1afe32c",
+      "Score": 0.837831975530321
+    },
+    {
+      "WorkItemId": 25366,
+      "AdoTitle": "Column Text Finder Reject Search Table Page \u05DE\u05D0\u05EA\u05E8 \u05D8\u05E7\u05E1\u05D8 \u05E2\u05DE\u05D5\u05D3\u05D5\u05EA \u05D3\u05D7\u05D9\u05D9\u05D4 \u05D7\u05D9\u05E4\u05D5\u05E9 \u05D8\u05D1\u05DC\u05D4 \u05D3\u05E3",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Column_Text_Finder_Reject_25366",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Search_Table_Page_Tests.Column_Text_Finder_Reject_25366()",
+      "AllureUuid": "cb2a2803-a212-4dcb-b533-e1edbd352a0a",
+      "Score": 0.7226961360056521
+    },
+    {
+      "WorkItemId": 25422,
+      "AdoTitle": "Column Text Sorting Search Table Page \u05DE\u05D9\u05D5\u05DF \u05D8\u05E7\u05E1\u05D8 \u05E2\u05DE\u05D5\u05D3\u05D4 \u05D7\u05D9\u05E4\u05D5\u05E9 \u05D8\u05D1\u05DC\u05D4 \u05E2\u05DE\u05D5\u05D3",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Column_Text_Sorting_25422(poolName)",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Search_Table_Page_Tests.Column_Text_Sorting_25422(BusinessCode:BusinessCode.Enums.SearchPage_TableColumns)",
+      "AllureUuid": "86d869e7-db8a-4111-afcb-bd86128486ff",
+      "Score": 0.7548014238266134
+    },
+    {
+      "WorkItemId": 25942,
+      "AdoTitle": "Midul Process Delete Added Row In PopUp Field WithoutSaving power user",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_AfterConcatenationProcess_DeleteAllPopUpFields_26484",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Concatenation.Modelling_ConcatenationTests.Modelling_AfterConcatenationProcess_DeleteAllPopUpFields_26484()",
+      "AllureUuid": "06d0d40f-267a-4f86-a090-952815590b01",
+      "Score": 0.6865100531724337
+    },
+    {
+      "WorkItemId": 25944,
+      "AdoTitle": "Try to save save Tag Process Without Saving Any Column Verify Disable Tag Button After Refresh power user \u05E0\u05D9\u05E1\u05D9\u05D5\u05DF \u05E9\u05DE\u05D9\u05E8\u05D4 \u05E9\u05DC \u05EA\u05D9\u05D5\u05D2 \u05DC\u05DC\u05D0 \u05E2\u05DE\u05D5\u05D3\u05D4 \u05E2\u05DD \u05E4\u05D5\u05D5\u05D0\u05E8 \u05D9\u05D5\u05D6\u05E8 \u05D5\u05D5\u05D9\u05D3\u05D0 \u05E9\u05D0\u05D9\u05DF \u05E9\u05DE\u05D9\u05E8\u05D4 \u05DC\u05D0\u05D7\u05E8 \u05E8\u05E2\u05E0\u05D5\u05DF \u05D3\u05E3",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_TrySaveTagProcessWithoutSavingAnyColumn_VerifyDisableTagButtonAfterRefresh_25944",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_ContentWorld_PowerUserTests.Modelling_TrySaveTagProcessWithoutSavingAnyColumn_VerifyDisableTagButtonAfterRefresh_25944()",
+      "AllureUuid": "20841dad-636a-4d76-b6d7-ed668bbab6d9",
+      "Score": 0.7440074427266268
+    },
+    {
+      "WorkItemId": 26483,
+      "AdoTitle": "Verify Concatenation process, check all fields, close panel - \u05E4\u05D0\u05E0\u05DC \u05D1\u05D3\u05D9\u05E7\u05EA \u05E9\u05E8\u05E9\u05D5\u05E8 \u05D1\u05D3\u05D9\u05E7\u05EA \u05E4\u05D0\u05E0\u05DC",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_ConcatenationProcess_VerifyAllPopUpFieldsShown_26483",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Concatenation.Modelling_ConcatenationTests.Modelling_ConcatenationProcess_VerifyAllPopUpFieldsShown_26483()",
+      "AllureUuid": "ed07a9ef-6edd-455f-961c-e7256a9d38eb",
+      "Score": 0.7879615190482001
+    },
+    {
+      "WorkItemId": 26484,
+      "AdoTitle": "Delete panel concatenation \u05DE\u05D7\u05D9\u05E7\u05EA \u05E4\u05D0\u05E0\u05DC \u05E9\u05E8\u05E9\u05D5\u05E8",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_ConcatenationProcess_AllPopUpFieldsShownWithColumn_25262",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Concatenation.Modelling_ConcatenationTests.Modelling_ConcatenationProcess_AllPopUpFieldsShownWithColumn_25262()",
+      "AllureUuid": "fcdb8623-f96d-4d7d-abc4-d669edad9b29",
+      "Score": 0.6600839164142158
+    },
+    {
+      "WorkItemId": 26485,
+      "AdoTitle": "Condition panel Add, Verify \u0026 Delete \u05E4\u05D0\u05E0\u05DC \u05EA\u05E0\u05D0\u05D9\u05DD \u05D4\u05D5\u05E1\u05E4\u05D4 , \u05D5\u05D5\u05D9\u05D3\u05D5\u05D0 \u05D5\u05DE\u05D7\u05D9\u05E7\u05D4",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_ConditionProcess_WithComparisonOperator_26486",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_ConditionTests.Modelling_ConditionProcess_WithComparisonOperator_26486()",
+      "AllureUuid": "cc80b505-8910-4dcd-b73a-7ce7f7cfc3f1",
+      "Score": 0.7478599873939942
+    },
+    {
+      "WorkItemId": 26486,
+      "AdoTitle": "Panel conditions with comparison operator Add verify \u0026 delete \u05E4\u05D0\u05E0\u05DC \u05EA\u05E0\u05D0\u05D9\u05DD \u05E2\u05DD \u05DE\u05E7\u05D3\u05DD \u05D4\u05E9\u05D5\u05D5\u05D0\u05D4 \u05D4\u05D5\u05E1\u05E4\u05D4 , \u05D5\u05D5\u05D9\u05D3\u05D5\u05D0 \u05D5\u05DE\u05D7\u05D9\u05E7\u05D4",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_PreviewColumns_WithColumnsAndStrings_Negative_30065",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_UDF_PreviewTests.Modelling_PreviewColumns_WithColumnsAndStrings_Negative_30065()",
+      "AllureUuid": "594490ae-89d3-4a84-9c1b-d01787371593",
+      "Score": 0.6983958529632446
+    },
+    {
+      "WorkItemId": 26487,
+      "AdoTitle": "Modelling_ContentWorldProcess_AddRowInPopUpField \u05DE\u05D9\u05D3\u05D5\u05DC \u05D4\u05D5\u05E1\u05E4\u05EA \u05E9\u05D5\u05E8\u05D4 \u05D1\u05EA\u05D5\u05DA \u05E4\u05D0\u05E0\u05DC \u05E2\u05D5\u05DC\u05DE\u05D5\u05EA \u05DE\u05D9\u05D3\u05E2 Power user",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_ContentWorldProcess_AddRowInPopUpField_26487",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_ContentWorld_PowerUserTests.Modelling_ContentWorldProcess_AddRowInPopUpField_26487()",
+      "AllureUuid": "5d1bc420-2924-41af-86b1-c70fa2de713b",
+      "Score": 0.7882965733445388
+    },
+    {
+      "WorkItemId": 27241,
+      "AdoTitle": "Modelling_MultipleSaveTagsSaveMidulsProcess_AdminUser \u05E9\u05DE\u05D9\u05E8\u05EA \u05EA\u05D9\u05D5\u05D2\u05D9\u05DD \u05D5\u05E9\u05DE\u05D9\u05E8\u05EA \u05DE\u05D9\u05D3\u05D5\u05DC\u05D9\u05DD",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_ContentWorldProcess_MinimizeWindowSaveTag_25968",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling_ContentWorld_AdminTests.Modelling_ContentWorldProcess_MinimizeWindowSaveTag_25968()",
+      "AllureUuid": "2f1bd8b9-ed8a-4252-b50e-7222ccf39816",
+      "Score": 0.7643731862506655
+    },
+    {
+      "WorkItemId": 28925,
+      "AdoTitle": "update frame details -  \u05E2\u05D3\u05DB\u05D5\u05DF \u05E4\u05E8\u05D8\u05D9 \u05DE\u05E1\u05D2\u05E8\u05EA",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_Add_ReplaceProcess_FillInAllPopUpFieldsWithTheStringParameter_29276",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_ReplaceTests.Modelling_Add_ReplaceProcess_FillInAllPopUpFieldsWithTheStringParameter_29276()",
+      "AllureUuid": "dbbd232e-58be-493c-b43e-2dacced0479a",
+      "Score": 0.6236777529698205
+    },
+    {
+      "WorkItemId": 29144,
+      "AdoTitle": "Table Menu All Options Exist in  list - \u05E4\u05EA\u05D9\u05D7\u05EA \u05D8\u05D1\u05DC\u05D4 \u05DE\u05DB\u05E4\u05EA\u05D5\u05E8 \u05D8\u05D1\u05DC\u05D4 \u05D1\u05EA\u05E4\u05E8\u05D9\u05D8 \u05E2\u05DC\u05D9\u05D5\u05DF \u05D5\u05D1\u05D3\u05D9\u05E7\u05D4 \u05E9\u05DB\u05DC \u05D4\u05D0\u05D5\u05E4\u05E6\u05D9\u05D5\u05EA \u05E7\u05D9\u05D9\u05DE\u05D5\u05EA",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "TableMenu_AllOptions_Exist",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_TableMenuTests.TableMenu_AllOptions_Exist()",
+      "AllureUuid": "5d98d748-2deb-4616-b8cc-423d12e91add",
+      "Score": 0.7429141632416503
+    },
+    {
+      "WorkItemId": 29145,
+      "AdoTitle": "Table Menu Options Count \u05E4\u05EA\u05D9\u05D7\u05EA \u05D8\u05D1\u05DC\u05D4 \u05DE\u05DB\u05E4\u05EA\u05D5\u05E8 \u05D8\u05D1\u05DC\u05D4 \u05D1\u05EA\u05E4\u05E8\u05D9\u05D8 \u05E2\u05DC\u05D9\u05D5\u05DF \u05D5\u05E1\u05E4\u05D9\u05E8\u05EA \u05DB\u05DE\u05D5\u05EA \u05D4\u05E2\u05E8\u05DB\u05D9\u05DD",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "TableMenu_Options_Count",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_TableMenuTests.TableMenu_Options_Count()",
+      "AllureUuid": "340e0044-e14a-4da6-9ceb-e71882b4b1c3",
+      "Score": 0.7465455411504465
+    },
+    {
+      "WorkItemId": 29155,
+      "AdoTitle": "\u05D1\u05D3\u05D9\u05E7\u05EA \u05E4\u05EA\u05D9\u05D7\u05EA/\u05E1\u05D2\u05D9\u05E8\u05EA \u05D8\u05D1\u05DC\u05D4 \u05DE\u05DB\u05E4\u05EA\u05D5\u05E8 \u05D8\u05D1\u05DC\u05D4  - TableMenu_PopUp_OpenClose",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "TableMenu_PopUp_OpenClose_29155",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_TableMenuTests.TableMenu_PopUp_OpenClose_29155()",
+      "AllureUuid": "3fe26768-9e21-4f99-a063-2a3c628c1408",
+      "Score": 0.7699100334215565
+    },
+    {
+      "WorkItemId": 29157,
+      "AdoTitle": "Table Menu_ Click Specific Option_ FrameDetails -\u05D1\u05D7\u05D9\u05E8\u05EA \u05D0\u05D7\u05D3 \u05D4\u05D0\u05D5\u05E4\u05E6\u05D9\u05D5\u05EA \u05DE\u05EA\u05D5\u05DA \u05D4\u05E8\u05E9\u05D9\u05DE\u05D4 \u05E9\u05DC \u05DB\u05E4\u05EA\u05D5\u05E8 \u05D8\u05D1\u05DC\u05D4",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "TableMenu_ClickSpecificOption_FrameDetails_29157",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_TableMenuTests.TableMenu_ClickSpecificOption_FrameDetails_29157()",
+      "AllureUuid": "924f1c93-97cf-482d-b107-21d8fc48cb99",
+      "Score": 0.7592946060874866
+    },
+    {
+      "WorkItemId": 29159,
+      "AdoTitle": "Verify each table menu option individually - \u05D5\u05D5\u05D3\u05D0 \u05E9\u05DB\u05DC \u05D4\u05E9\u05DE\u05D5\u05EA \u05E9\u05DC \u05D4\u05E2\u05E8\u05DB\u05D9\u05DD \u05E0\u05DE\u05E6\u05D0\u05D9\u05DD \u05D1\u05DB\u05E4\u05EA\u05D5\u05E8 \u05D8\u05D1\u05DC\u05D4 \u05D1\u05E8\u05E9\u05D9\u05DE\u05D4 \u05E0\u05E4\u05EA\u05D7\u05EA",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "TableMenu_EachOption_Exists_29159",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_TableMenuTests.TableMenu_EachOption_Exists_29159()",
+      "AllureUuid": "42ad72fc-c781-49b3-803d-baeed173b74d",
+      "Score": 0.7079937193602461
+    },
+    {
+      "WorkItemId": 29160,
+      "AdoTitle": "LoadDelta_ PopUp _Opens \u05D5\u05D5\u05D3\u05D0 \u05E9\u05DE\u05E1\u05DA \u05D3\u05DC\u05EA\u05D0 \u05E0\u05E4\u05EA\u05D7",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "LoadDelta_PopUp_Opens_29160",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_TableMenuTests.LoadDelta_PopUp_Opens_29160()",
+      "AllureUuid": "cf2ce16b-832c-4f76-ba2d-936aedcfe9cc",
+      "Score": 0.7956818548245153
+    },
+    {
+      "WorkItemId": 29163,
+      "AdoTitle": "Load Delta _All Elements_ Exist - \u05D1\u05D3\u05D9\u05E7\u05EA \u05E2\u05E8\u05DB\u05D9\u05DD \u05D1\u05EA\u05D5\u05DA \u05DE\u05E1\u05DA \u05D3\u05DC\u05EA\u05D0",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "LoadDelta_AllElements_Exist",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_TableMenuTests.LoadDelta_AllElements_Exist()",
+      "AllureUuid": "1df8eb4e-fe85-4310-8d02-a00514f3422b",
+      "Score": 0.7774191325443418
+    },
+    {
+      "WorkItemId": 29166,
+      "AdoTitle": "Load Delta_ Dialog Title_ IsCorrect - \u05DB\u05D5\u05EA\u05E8\u05EA \u05E9\u05DC \u05D3\u05DC\u05EA\u05D0 \u05E7\u05D9\u05D9\u05DE\u05EA \u05D5\u05E0\u05DB\u05D5\u05E0\u05D4",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "LoadDelta_DialogTitle_IsCorrect_29166",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_TableMenuTests.LoadDelta_DialogTitle_IsCorrect_29166()",
+      "AllureUuid": "b46fd713-bd32-47c3-8cf1-b5bb5915194b",
+      "Score": 0.8022075936970623
+    },
+    {
+      "WorkItemId": 29168,
+      "AdoTitle": "Load Delta _ Toggle Options_ Exist - \u05E4\u05E1 \u05D2\u05DC\u05D9\u05DC\u05D4 \u05D1\u05DE\u05E1\u05DA \u05D3\u05DC\u05EA\u05D0 \u05D5\u05D9\u05D3\u05D5\u05D5\u05D0",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "LoadDelta_ToggleOptions_Exist_29168",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_TableMenuTests.LoadDelta_ToggleOptions_Exist_29168()",
+      "AllureUuid": "837fe545-64e5-4d5a-bc0e-beb63f801887",
+      "Score": 0.8129458328625674
+    },
+    {
+      "WorkItemId": 29169,
+      "AdoTitle": "Load Delta_  Library Tree_Displays Items - \u05DE\u05E1\u05DA \u05D3\u05DC\u05EA\u05D0 \u05E2\u05E5 \u05EA\u05E7\u05D9\u05D5\u05EA \u05D5\u05D5\u05D9\u05D3\u05D5\u05D0",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "LoadDelta_LibraryTree_DisplaysItems_29169",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_TableMenuTests.LoadDelta_LibraryTree_DisplaysItems_29169()",
+      "AllureUuid": "762395b8-3b0f-4244-aa64-02f828c42077",
+      "Score": 0.7431369219270891
+    },
+    {
+      "WorkItemId": 29170,
+      "AdoTitle": "Load Delta_ Load Button_ Initially Disabled \u05DE\u05E1\u05DA \u05D3\u05DC\u05EA\u05D0 \u05DB\u05E4\u05EA\u05D5\u05E8 \u05D8\u05E2\u05D9\u05E0\u05D4 \u05D1\u05DE\u05E6\u05D1 \u05DE\u05D5\u05E9\u05D4\u05D4",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "LoadDelta_LoadButton_InitiallyDisabled_29170",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_TableMenuTests.LoadDelta_LoadButton_InitiallyDisabled_29170()",
+      "AllureUuid": "42033d21-cdfb-45ff-8ace-e1db755852d4",
+      "Score": 0.7385535825977527
+    },
+    {
+      "WorkItemId": 29171,
+      "AdoTitle": "Load Delta _ PopUp _ Can Be Closed \u05DE\u05E1\u05DA \u05D3\u05DC\u05EA\u05D0 \u05DB\u05E4\u05EA\u05D5\u05E8 \u05E1\u05D2\u05D9\u05E8\u05D4 \u05EA\u05E7\u05D9\u05DF",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "LoadDelta_PopUp_CanBeClosed_29171",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_TableMenuTests.LoadDelta_PopUp_CanBeClosed_29171()",
+      "AllureUuid": "1595d25e-2041-4cea-8b2a-499f48a99a28",
+      "Score": 0.7583384355803986
+    },
+    {
+      "WorkItemId": 29172,
+      "AdoTitle": "Load Delta_ Complete Flow_ Select And Submit - \u05DE\u05E1\u05DA \u05D3\u05DC\u05EA\u05D0 \u05D1\u05D7\u05D9\u05E8\u05EA \u05E7\u05D5\u05D1\u05E5 \u05D5\u05E9\u05DC\u05D9\u05D7\u05EA \u05D8\u05D5\u05E4\u05E1",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "LoadDelta_SelectFile_LoadButtonEnabled_29171",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_TableMenuTests.LoadDelta_SelectFile_LoadButtonEnabled_29171()",
+      "AllureUuid": "98537439-a5ce-40c7-8ab4-4433dd064c6a",
+      "Score": 0.6964036325643832
+    },
+    {
+      "WorkItemId": 29174,
+      "AdoTitle": "Load Delta_ Enter Path_And Submit",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "LoadDelta_EnterPath_AndSubmit_29174",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_TableMenuTests.LoadDelta_EnterPath_AndSubmit_29174()",
+      "AllureUuid": "612074f8-08f1-401a-9981-227472feb14a",
+      "Score": 0.7044799745530241
+    },
+    {
+      "WorkItemId": 29175,
+      "AdoTitle": "Load Delta _Search And Select  File - \u05DE\u05E1\u05DA \u05D3\u05DC\u05EA\u05D0 \u05D7\u05E4\u05E9 \u05E7\u05D5\u05D1\u05E5 \u05D5\u05D1\u05D7\u05E8",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "LoadDelta_SearchAndSelect_File_29175",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_TableMenuTests.LoadDelta_SearchAndSelect_File_29175()",
+      "AllureUuid": "42fabdc9-a52d-43ce-bfad-fbc2d616b9d6",
+      "Score": 0.723874512778707
+    },
+    {
+      "WorkItemId": 29276,
+      "AdoTitle": "Modelling_Replace Process_FillIn All PopUp Fields",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_ReplaceProcess_FillInAllPopUpFields_29276",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_ReplaceTests.Modelling_ReplaceProcess_FillInAllPopUpFields_29276()",
+      "AllureUuid": "a08437e0-fb27-4222-afd2-409c79e961a5",
+      "Score": 0.7409033271216146
+    },
+    {
+      "WorkItemId": 29278,
+      "AdoTitle": "Modelling_Split Process fill and check All PopUp Fields  - \u05E4\u05D0\u05E0\u05DC \u05E4\u05D9\u05E6\u05D5\u05DC \u05D4\u05DB\u05E0\u05E1 \u05D5\u05D5\u05D3\u05D0 \u05E2\u05E8\u05DB\u05D9\u05DD",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_SplitProcess_AllPopUpFieldsShown_29278",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling_SplitTests.Modelling_SplitProcess_AllPopUpFieldsShown_29278()",
+      "AllureUuid": "62ceffd8-84a8-48dc-af02-803fd6aa91af",
+      "Score": 0.7457990066220628
+    },
+    {
+      "WorkItemId": 30042,
+      "AdoTitle": "Concatenation of Two Strings \u2013 Real Time Preview - \u05E9\u05E8\u05E9\u05D5\u05E8 \u05E9\u05DC \u05E9\u05EA\u05D9 \u05DE\u05D7\u05E8\u05D5\u05D6\u05D5\u05EA \u05E4\u05E8\u05D9\u05D5\u05D5\u05D9\u05D5 \u05D1\u05D6\u05DE\u05DF \u05D0\u05DE\u05EA",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_ConcatenationProcess_AllPopUpFieldsShownWithColumn_25262",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Concatenation.Modelling_ConcatenationTests.Modelling_ConcatenationProcess_AllPopUpFieldsShownWithColumn_25262()",
+      "AllureUuid": "2b1aef87-ca3c-4db7-bd08-b43eaade3ae6",
+      "Score": 0.7112408243210453
+    },
+    {
+      "WorkItemId": 30062,
+      "AdoTitle": "Display of Selected Columns When They Are Not Visible in the Current Table View - \u05EA\u05E6\u05D5\u05D2\u05EA \u05E2\u05DE\u05D5\u05D3\u05D5\u05EA \u05DB\u05D0\u05E9\u05E8 \u05D4\u05E2\u05DE\u05D5\u05D3\u05D5\u05EA \u05D4\u05E0\u05D1\u05D7\u05E8\u05D5\u05EA \u05DC\u05D0 \u05E0\u05DE\u05E6\u05D0\u05D5\u05EA \u05D1\u05D0\u05D6\u05D5\u05E8 \u05D4\u05DE\u05D5\u05E6\u05D2 \u05D1\u05D8\u05D1\u05DC\u05D4",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_PreviewColumns_WithTwoFirstColumns_30043",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_UDF_PreviewTests.Modelling_PreviewColumns_WithTwoFirstColumns_30043()",
+      "AllureUuid": "a04ed95f-7ded-45aa-a33f-5768b514fad0",
+      "Score": 0.7028739030602225
+    },
+    {
+      "WorkItemId": 30898,
+      "AdoTitle": "Modelling - Additional info - fill, verify, delete in all fields and press save",
+      "AdoSuite": "Modeling functionality",
+      "AllureTitle": "Modelling_ContentWorldProcess_DeleteAddedRowInPopUpField_25297",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling_ContentWorld_AdminTests.Modelling_ContentWorldProcess_DeleteAddedRowInPopUpField_25297()",
+      "AllureUuid": "20f4c038-1466-4369-9a18-e65dc1ec2469",
+      "Score": 0.7219505298329203
+    },
+    {
+      "WorkItemId": 26084,
+      "AdoTitle": "GeneralForm Comboboxes Items Verification \u05D0\u05D9\u05DE\u05D5\u05EA \u05E4\u05E8\u05D9\u05D8\u05D9 \u05EA\u05D9\u05D1\u05D4 \u05DB\u05DC\u05DC\u05D9\u05EA \u05D1\u05D8\u05D5\u05E4\u05E1 Combobox",
+      "AdoSuite": "Upload page",
+      "AllureTitle": "GeneralForm_Comboboxes_Items_Verification_26084",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Upload_Page_Tests.GeneralForm_Comboboxes_Items_Verification_26084()",
+      "AllureUuid": "b5020725-857b-4802-b95a-f4328c09dbf4",
+      "Score": 0.7491244178157785
+    },
+    {
+      "WorkItemId": 26095,
+      "AdoTitle": "Loading From VIEW Comboboxes Items Verification \u05D8\u05D5\u05E2\u05DF \u05DE-VIEW Comboboxes \u05D0\u05D9\u05DE\u05D5\u05EA \u05E4\u05E8\u05D9\u05D8\u05D9\u05DD",
+      "AdoSuite": "Upload page",
+      "AllureTitle": "Work_Form_Comboboxes_Items_Verification_26105",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Upload_Page_Tests.Work_Form_Comboboxes_Items_Verification_26105()",
+      "AllureUuid": "5d1064e3-27f8-41b1-a503-9c288003a168",
+      "Score": 0.7284526815108165
+    },
+    {
+      "WorkItemId": 26102,
+      "AdoTitle": "FolderIndex Comboboxes Items Verification \u05D0\u05D9\u05DE\u05D5\u05EA \u05E4\u05E8\u05D9\u05D8\u05D9 \u05EA\u05D9\u05D1\u05D5\u05EA \u05E7\u05D5\u05DE\u05D1\u05D5 \u05E9\u05DC \u05D0\u05D9\u05E0\u05D3\u05E7\u05E1 \u05EA\u05D9\u05E7\u05D9\u05D5\u05EA",
+      "AdoSuite": "Upload page",
+      "AllureTitle": "LoadingFromDBE_Form_Comboboxes_Items_Verification_26106",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Upload_Page_Tests.LoadingFromDBE_Form_Comboboxes_Items_Verification_26106()",
+      "AllureUuid": "862f16eb-b7eb-482a-a302-c4728cf00697",
+      "Score": 0.7144013861227805
+    },
+    {
+      "WorkItemId": 29609,
+      "AdoTitle": "Modelling_AddMultiplePanels_CombinedProcess",
+      "AdoSuite": "JimAutomated",
+      "AllureTitle": "Modelling_AddMultiplePanels_CombinedProcess",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling_Combined_Tests.Modelling_AddMultiplePanels_CombinedProcess()",
+      "AllureUuid": "c272d925-854b-4266-913f-b7c86d4781e5",
+      "Score": 0.986729511141073
+    },
+    {
+      "WorkItemId": 29724,
+      "AdoTitle": "Column_Text_Finder_Reject_25366",
+      "AdoSuite": "JimAutomated",
+      "AllureTitle": "FrameDetails_Calander_Update_28925",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Search_Table_Page_Tests.FrameDetails_Calander_Update_28925()",
+      "AllureUuid": "90dc24f8-d5c3-4fc6-902a-b36d4d0f6048",
+      "Score": 0.8775226135044605
+    }
+  ],
+  "UnmatchedAdo": [
+    {
+      "WorkItemId": 798,
+      "AdoTitle": "Run all automation test",
+      "AdoSuite": "Regression tests"
+    },
+    {
+      "WorkItemId": 3947,
+      "AdoTitle": "separation from name and imsi number on table on main grid",
+      "AdoSuite": "Site"
+    },
+    {
+      "WorkItemId": 3767,
+      "AdoTitle": "Hide filter row on small view ports",
+      "AdoSuite": "Site"
+    },
+    {
+      "WorkItemId": 2922,
+      "AdoTitle": "Post new request with the new table imsiData",
+      "AdoSuite": "Post"
+    },
+    {
+      "WorkItemId": 2206,
+      "AdoTitle": "edit / add imsi name - Backend check",
+      "AdoSuite": "API"
+    },
+    {
+      "WorkItemId": 2201,
+      "AdoTitle": " imsi name from imsi ImsiMetadata",
+      "AdoSuite": "Site"
+    },
+    {
+      "WorkItemId": 2207,
+      "AdoTitle": "Open menu on right click on selected row",
+      "AdoSuite": "Site"
+    },
+    {
+      "WorkItemId": 2209,
+      "AdoTitle": "row selection and display on the map",
+      "AdoSuite": "Site"
+    },
+    {
+      "WorkItemId": 2622,
+      "AdoTitle": "Group by imsi number",
+      "AdoSuite": "Site"
+    },
+    {
+      "WorkItemId": 2659,
+      "AdoTitle": "Open new request window ( Immediate ,schedule, period, fix )",
+      "AdoSuite": "Site"
+    },
+    {
+      "WorkItemId": 785,
+      "AdoTitle": "Get without filter integration test",
+      "AdoSuite": "Get"
+    },
+    {
+      "WorkItemId": 788,
+      "AdoTitle": "Get filter integration test",
+      "AdoSuite": "Get"
+    },
+    {
+      "WorkItemId": 1221,
+      "AdoTitle": "GET with environment variables",
+      "AdoSuite": "Get"
+    },
+    {
+      "WorkItemId": 905,
+      "AdoTitle": "Manual Test - Drop New imsi file into folder (Failed to load Json File)",
+      "AdoSuite": "Merge"
+    },
+    {
+      "WorkItemId": 921,
+      "AdoTitle": "Automation integration test - Check new GisImsisWriter service ",
+      "AdoSuite": "Merge"
+    },
+    {
+      "WorkItemId": 882,
+      "AdoTitle": "selected imsi on table",
+      "AdoSuite": "Imsi map"
+    },
+    {
+      "WorkItemId": 1222,
+      "AdoTitle": "Filter by status",
+      "AdoSuite": "Imsi tables"
+    },
+    {
+      "WorkItemId": 827,
+      "AdoTitle": "Insert new IMSI ",
+      "AdoSuite": "Imsi tables"
+    },
+    {
+      "WorkItemId": 889,
+      "AdoTitle": "Filter area",
+      "AdoSuite": "Imsi tables"
+    },
+    {
+      "WorkItemId": 920,
+      "AdoTitle": "imsi countries",
+      "AdoSuite": "Imsi tables"
+    },
+    {
+      "WorkItemId": 1226,
+      "AdoTitle": "hyperlink on result description column",
+      "AdoSuite": "Imsi tables"
+    },
+    {
+      "WorkItemId": 1228,
+      "AdoTitle": "Countries when creating new imsi",
+      "AdoSuite": "Imsi tables"
+    },
+    {
+      "WorkItemId": 1402,
+      "AdoTitle": "Remove map picture",
+      "AdoSuite": "Imsi tables"
+    },
+    {
+      "WorkItemId": 1767,
+      "AdoTitle": "Add filter to column",
+      "AdoSuite": "UI"
+    },
+    {
+      "WorkItemId": 1765,
+      "AdoTitle": "Show imsi and imsi history on map",
+      "AdoSuite": "UI"
+    },
+    {
+      "WorkItemId": 1764,
+      "AdoTitle": "Check countries in site",
+      "AdoSuite": "UI"
+    },
+    {
+      "WorkItemId": 1761,
+      "AdoTitle": "Group rows by imsi ",
+      "AdoSuite": "UI"
+    },
+    {
+      "WorkItemId": 1755,
+      "AdoTitle": "Gis - create imsi request - immediate",
+      "AdoSuite": "Automation"
+    },
+    {
+      "WorkItemId": 1822,
+      "AdoTitle": "Gis - create imsi request - Schedule ",
+      "AdoSuite": "Automation"
+    },
+    {
+      "WorkItemId": 1823,
+      "AdoTitle": "Gis - create imsi request - Cyclic",
+      "AdoSuite": "Automation"
+    },
+    {
+      "WorkItemId": 1782,
+      "AdoTitle": "Schedule - Request process ",
+      "AdoSuite": "API"
+    },
+    {
+      "WorkItemId": 1702,
+      "AdoTitle": "Information Request window",
+      "AdoSuite": "API"
+    },
+    {
+      "WorkItemId": 1790,
+      "AdoTitle": "Group rows by imsi ",
+      "AdoSuite": "API"
+    },
+    {
+      "WorkItemId": 1791,
+      "AdoTitle": "Check countries in site",
+      "AdoSuite": "API"
+    },
+    {
+      "WorkItemId": 293,
+      "AdoTitle": "Main screen Results Execution Time",
+      "AdoSuite": "Car Location screen"
+    },
+    {
+      "WorkItemId": 294,
+      "AdoTitle": "Main screen Results Country column",
+      "AdoSuite": "Car Location screen"
+    },
+    {
+      "WorkItemId": 295,
+      "AdoTitle": "Main screen Results Comment column",
+      "AdoSuite": "Car Location screen"
+    },
+    {
+      "WorkItemId": 296,
+      "AdoTitle": "Main screen Results ID",
+      "AdoSuite": "Car Location screen"
+    },
+    {
+      "WorkItemId": 297,
+      "AdoTitle": "Main screen Results Filter Line",
+      "AdoSuite": "Car Location screen"
+    },
+    {
+      "WorkItemId": 298,
+      "AdoTitle": "Main screen Results Combination filters",
+      "AdoSuite": "Car Location screen"
+    },
+    {
+      "WorkItemId": 299,
+      "AdoTitle": "Main screen Results Combination filters of two or more ",
+      "AdoSuite": "Car Location screen"
+    },
+    {
+      "WorkItemId": 24617,
+      "AdoTitle": "Verify that a request which receives 401 retry again \u05D5\u05D5\u05D3\u05D0 \u05E9\u05D1\u05E7\u05E9\u05D4 \u05E9\u05DE\u05E7\u05D1\u05DC\u05EA \u05E1\u05D8\u05D8\u05D5\u05E1 401 \u05DE\u05E6\u05D9\u05D2\u05D4 \u05D0\u05EA \u05DE\u05E1\u05DA \u05D4\u05D4\u05EA\u05D7\u05D1\u05E8\u05D5\u05EA",
+      "AdoSuite": "\u05E4\u05EA\u05D9\u05D7\u05EA \u05DE\u05E1\u05DA \u05DC\u05D5\u05D2 \u05D0\u05D9\u05DF"
+    },
+    {
+      "WorkItemId": 24618,
+      "AdoTitle": "Successful login produces preliminary token and forwards it to backend \u05D4\u05EA\u05D7\u05D1\u05E8\u05D5\u05EA \u05DE\u05D5\u05E6\u05DC\u05D7\u05EA \u05DE\u05D9\u05D9\u05E6\u05E8\u05EA \u05D8\u05D5\u05E7\u05DF \u05E8\u05D0\u05E9\u05D5\u05E0\u05D9 \u05D5\u05E9\u05D5\u05DC\u05D7\u05EA \u05D0\u05D5\u05EA\u05D5 \u05DC\u05E9\u05E8\u05EA",
+      "AdoSuite": "\u05E4\u05EA\u05D9\u05D7\u05EA \u05DE\u05E1\u05DA \u05DC\u05D5\u05D2 \u05D0\u05D9\u05DF"
+    },
+    {
+      "WorkItemId": 24644,
+      "AdoTitle": "Valid JWT is issued, stored, and used \u05D8\u05D5\u05E7\u05DF \u05DE\u05D5\u05E0\u05E4\u05E7 \u05E2\u05DD \u05D2\u0027\u05D9\u05D9\u05E1\u05D5\u05DF \u05E4\u05D2 \u05EA\u05D5\u05E7\u05E3",
+      "AdoSuite": "\u05E4\u05EA\u05D9\u05D7\u05EA \u05DE\u05E1\u05DA \u05DC\u05D5\u05D2 \u05D0\u05D9\u05DF"
+    },
+    {
+      "WorkItemId": 24669,
+      "AdoTitle": "Valid JWT is reused and Split loads without another login \u05D8\u05D5\u05E7\u05DF \u05E2\u05DD \u05D2\u0027\u05D9\u05D9\u05E1\u05D5\u05DF \u05D1\u05EA\u05D5\u05E7\u05E3 \u05E0\u05D8\u05E2\u05DF \u05DC\u05DC\u05D0 \u05D4\u05EA\u05D7\u05D1\u05E8\u05D5\u05EA \u05E0\u05D5\u05E1\u05E4\u05EA",
+      "AdoSuite": "\u05E4\u05EA\u05D9\u05D7\u05EA \u05DE\u05E1\u05DA \u05DC\u05D5\u05D2 \u05D0\u05D9\u05DF"
+    },
+    {
+      "WorkItemId": 24674,
+      "AdoTitle": "Original request is replayed automatically after re authentication \u05D1\u05E7\u05E9\u05D4 \u05DE\u05E7\u05D5\u05E8\u05D9\u05EA \u05D7\u05D5\u05D6\u05E8\u05EA \u05D0\u05D5\u05D8\u05D5\u05DE\u05D8\u05D9\u05EA \u05DC\u05D0\u05D7\u05E8 \u05D0\u05D9\u05DE\u05D5\u05EA \u05DE\u05D7\u05D5\u05D3\u05E9",
+      "AdoSuite": "\u05E4\u05EA\u05D9\u05D7\u05EA \u05DE\u05E1\u05DA \u05DC\u05D5\u05D2 \u05D0\u05D9\u05DF"
+    },
+    {
+      "WorkItemId": 24675,
+      "AdoTitle": "Request without Authorization header is rejected \u05D1\u05E7\u05E9\u05D4 \u05DC\u05DC\u05D0 \u05D4\u05E8\u05E9\u05D0\u05D4 \u05E0\u05D3\u05D7\u05D9\u05EA",
+      "AdoSuite": "\u05E4\u05EA\u05D9\u05D7\u05EA \u05DE\u05E1\u05DA \u05DC\u05D5\u05D2 \u05D0\u05D9\u05DF"
+    },
+    {
+      "WorkItemId": 24677,
+      "AdoTitle": "Request with token older than 24 h is rejected \u05D1\u05E7\u05E9\u05D4 \u05E2\u05DD \u05D8\u05D5\u05E7\u05DF \u05DE\u05E2\u05DC 24 \u05E9\u05E2\u05D5\u05EA \u05E0\u05D3\u05D7\u05EA",
+      "AdoSuite": "\u05E4\u05EA\u05D9\u05D7\u05EA \u05DE\u05E1\u05DA \u05DC\u05D5\u05D2 \u05D0\u05D9\u05DF"
+    },
+    {
+      "WorkItemId": 24678,
+      "AdoTitle": "Request with token signed by wrong key is rejected \u05D1\u05E7\u05E9\u05D4 \u05E2\u05DD \u05D8\u05D5\u05E7\u05DF \u05D5\u05DE\u05E4\u05EA\u05D7 \u05E9\u05D2\u05D5\u05D9 \u05E0\u05D3\u05D7\u05EA",
+      "AdoSuite": "\u05E4\u05EA\u05D9\u05D7\u05EA \u05DE\u05E1\u05DA \u05DC\u05D5\u05D2 \u05D0\u05D9\u05DF"
+    },
+    {
+      "WorkItemId": 24679,
+      "AdoTitle": "Token without group claim is rejected for Split action",
+      "AdoSuite": "\u05E4\u05EA\u05D9\u05D7\u05EA \u05DE\u05E1\u05DA \u05DC\u05D5\u05D2 \u05D0\u05D9\u05DF"
+    },
+    {
+      "WorkItemId": 24691,
+      "AdoTitle": "Admin user can create a resource",
+      "AdoSuite": "\u05E4\u05EA\u05D9\u05D7\u05EA \u05DE\u05E1\u05DA \u05DC\u05D5\u05D2 \u05D0\u05D9\u05DF"
+    },
+    {
+      "WorkItemId": 24692,
+      "AdoTitle": "Viewer user cannot Edit a resource",
+      "AdoSuite": "\u05E4\u05EA\u05D9\u05D7\u05EA \u05DE\u05E1\u05DA \u05DC\u05D5\u05D2 \u05D0\u05D9\u05DF"
+    },
+    {
+      "WorkItemId": 24693,
+      "AdoTitle": "Editor user can edit but cannot delete a resource",
+      "AdoSuite": "\u05E4\u05EA\u05D9\u05D7\u05EA \u05DE\u05E1\u05DA \u05DC\u05D5\u05D2 \u05D0\u05D9\u05DF"
+    },
+    {
+      "WorkItemId": 24694,
+      "AdoTitle": "Token is transmitted only over HTTPS",
+      "AdoSuite": "\u05E4\u05EA\u05D9\u05D7\u05EA \u05DE\u05E1\u05DA \u05DC\u05D5\u05D2 \u05D0\u05D9\u05DF"
+    },
+    {
+      "WorkItemId": 24695,
+      "AdoTitle": "Loop protection stops retries after three consecutive 401 responses",
+      "AdoSuite": "\u05E4\u05EA\u05D9\u05D7\u05EA \u05DE\u05E1\u05DA \u05DC\u05D5\u05D2 \u05D0\u05D9\u05DF"
+    },
+    {
+      "WorkItemId": 24697,
+      "AdoTitle": "JWT is stored only in secure storage",
+      "AdoSuite": "\u05E4\u05EA\u05D9\u05D7\u05EA \u05DE\u05E1\u05DA \u05DC\u05D5\u05D2 \u05D0\u05D9\u05DF"
+    },
+    {
+      "WorkItemId": 25126,
+      "AdoTitle": "Automatic labeling fills fields \u05E9\u05D3\u05D5\u05EA \u05DE\u05D9\u05DC\u05D5\u05D9 \u05D0\u05D5\u05D8\u05D5\u05DE\u05D8\u05D9\u05D9\u05DD \u05E9\u05DC \u05EA\u05D9\u05D5\u05D2",
+      "AdoSuite": "Modeling functionality"
+    },
+    {
+      "WorkItemId": 25132,
+      "AdoTitle": "Select view All, Tagged, Not Tagged Basic \u05D1\u05E1\u05D9\u05E1 \u05D1\u05D7\u05E8 \u05EA\u05E6\u05D5\u05D2\u05D4 \u05D4\u05DB\u05DC, \u05DE\u05EA\u05D5\u05D9\u05D2, \u05DC\u05D0 \u05DE\u05EA\u05D5\u05D9\u05D2",
+      "AdoSuite": "Modeling functionality"
+    },
+    {
+      "WorkItemId": 25142,
+      "AdoTitle": "Select view All, Tagged, Not Tagged Detailed \u05D1\u05D7\u05E8 \u05EA\u05E6\u05D5\u05D2\u05D4 \u05D4\u05DB\u05DC, \u05DE\u05EA\u05D5\u05D9\u05D2, \u05DC\u05D0 \u05DE\u05EA\u05D5\u05D9\u05D2 \u05DE\u05E4\u05D5\u05E8\u05D8",
+      "AdoSuite": "Modeling functionality"
+    },
+    {
+      "WorkItemId": 25172,
+      "AdoTitle": "Select view Processed Columns \u05D1\u05D7\u05E8 \u05EA\u05E6\u05D5\u05D2\u05D4 \u05E9\u05DC \u05E2\u05DE\u05D5\u05D3\u05D5\u05EA \u05DE\u05E2\u05D5\u05D1\u05D3\u05D5\u05EA",
+      "AdoSuite": "Modeling functionality"
+    },
+    {
+      "WorkItemId": 25190,
+      "AdoTitle": "Select View Selected Columns \u05D1\u05D7\u05E8 \u05D4\u05E6\u05D2 \u05E2\u05DE\u05D5\u05D3\u05D5\u05EA \u05E0\u05D1\u05D7\u05E8\u05D5\u05EA",
+      "AdoSuite": "Modeling functionality"
+    },
+    {
+      "WorkItemId": 25195,
+      "AdoTitle": "Select View Selected Columns search and reject \u05D1\u05D7\u05E8 \u05D4\u05E6\u05D2 \u05E2\u05DE\u05D5\u05D3\u05D5\u05EA \u05E0\u05D1\u05D7\u05E8\u05D5\u05EA \u05D7\u05D9\u05E4\u05D5\u05E9 \u05D5\u05D3\u05D7\u05D4",
+      "AdoSuite": "Modeling functionality"
+    },
+    {
+      "WorkItemId": 25215,
+      "AdoTitle": "Advanced Filter Combo dynamic data verification \u05E0\u05EA\u05D5\u05E0\u05D9\u05DD \u05D3\u05D9\u05E0\u05DE\u05D9\u05D9\u05DD \u05E9\u05DC \u05E9\u05D9\u05DC\u05D5\u05D1 \u05DE\u05E1\u05E0\u05E0\u05D9\u05DD \u05DE\u05EA\u05E7\u05D3\u05DE\u05D9\u05DD",
+      "AdoSuite": "Modeling functionality"
+    },
+    {
+      "WorkItemId": 25295,
+      "AdoTitle": "ContentWorldProcess_MoveBetweenContents_SaveMidulWithUDF \u05E9\u05DE\u05D9\u05E8\u05EA \u05DE\u05D9\u05D3\u05D5\u05DC \u05DE\u05E9\u05D5\u05DC\u05D1 \u05E4\u05D0\u05E0\u05DC \u05EA\u05E0\u05D0\u05D9\u05DD",
+      "AdoSuite": "Modeling functionality"
+    },
+    {
+      "WorkItemId": 25300,
+      "AdoTitle": "ContentWorld process (insurance) fill in mandatory field and save draft \u0026 midul_25290",
+      "AdoSuite": "Modeling functionality"
+    },
+    {
+      "WorkItemId": 25304,
+      "AdoTitle": "Save tag process without saving any column, refresh and then check if save tag disable or changed to update tag \u05E9\u05DE\u05D5\u05E8 \u05EA\u05D9\u05D5\u05D2 \u05D1\u05DC\u05D9\u05EA\u05D9\u05D5\u05D2 \u05E2\u05DE\u05D5\u05D3\u05D4 \u05E8\u05E2\u05E0\u05DF \u05D5\u05D1\u05D3\u05D5\u05E7 \u05D4\u05D0\u05DD \u05D4\u05EA\u05D9\u05D5\u05D2 \u05E0\u05E9\u05DE\u05E8 \u05D0\u05D5 \u05D4\u05E9\u05EA\u05E0\u05D4 \u05DC\u05E2\u05D3\u05DB\u05D5\u05DF \u05EA\u05D9\u05D5\u05D2",
+      "AdoSuite": "Modeling functionality"
+    },
+    {
+      "WorkItemId": 25305,
+      "AdoTitle": "Save tagg with column and then refresh the page and try to save a column in midul panel \u05E9\u05DE\u05D9\u05E8\u05EA \u05EA\u05D9\u05D5\u05D2 \u05E2\u05DD \u05E2\u05DE\u05D5\u05D3\u05D4 \u05D5\u05E8\u05E2\u05E0\u05D5\u05DF \u05D5\u05D0\u05D6 \u05E0\u05D9\u05E1\u05D9\u05D5\u05DF \u05E9\u05DE\u05D9\u05E8\u05EA \u05E2\u05D5\u05DC\u05DD \u05DE\u05D9\u05D3\u05E2",
+      "AdoSuite": "Modeling functionality"
+    },
+    {
+      "WorkItemId": 25364,
+      "AdoTitle": "Column Text Finder in Search Table Page \u05DE\u05D0\u05EA\u05E8 \u05D8\u05E7\u05E1\u05D8 \u05E2\u05DE\u05D5\u05D3\u05D5\u05EA \u05D1\u05D3\u05E3 \u05D7\u05D9\u05E4\u05D5\u05E9 \u05D8\u05D1\u05DC\u05EA",
+      "AdoSuite": "Modeling functionality"
+    },
+    {
+      "WorkItemId": 25435,
+      "AdoTitle": "Column Date Sorting Search Table Page \u05DE\u05D9\u05D5\u05DF \u05EA\u05D0\u05E8\u05D9\u05DA \u05E2\u05DE\u05D5\u05D3\u05D4 \u05D7\u05D9\u05E4\u05D5\u05E9 \u05D8\u05D1\u05DC\u05EA \u05E2\u05DE\u05D5\u05D3",
+      "AdoSuite": "Modeling functionality"
+    },
+    {
+      "WorkItemId": 25451,
+      "AdoTitle": "Column Date Filtering Search Table Page \u05E1\u05D9\u05E0\u05D5\u05DF \u05EA\u05D0\u05E8\u05D9\u05DA \u05E2\u05DE\u05D5\u05D3\u05D4 \u05D7\u05D9\u05E4\u05D5\u05E9 \u05D8\u05D1\u05DC\u05EA \u05E2\u05DE\u05D5\u05D3",
+      "AdoSuite": "Modeling functionality"
+    },
+    {
+      "WorkItemId": 25877,
+      "AdoTitle": "Column Date Filtering InRange \u05E1\u05D9\u05E0\u05D5\u05DF \u05EA\u05D0\u05E8\u05D9\u05DB\u05D9 \u05E2\u05DE\u05D5\u05D3\u05D4 \u05D1\u05D8\u05D5\u05D5\u05D7",
+      "AdoSuite": "Modeling functionality"
+    },
+    {
+      "WorkItemId": 25941,
+      "AdoTitle": "Midul Fill In Mandatory Field with Power User and save draft \u002B Verify",
+      "AdoSuite": "Modeling functionality"
+    },
+    {
+      "WorkItemId": 25943,
+      "AdoTitle": "Save tag process with saving column, refresh and then check if save tag disable and changed to update tag in a disable mode power user",
+      "AdoSuite": "Modeling functionality"
+    },
+    {
+      "WorkItemId": 27259,
+      "AdoTitle": "Modelling_SaveTagWithAdditionalInfoSaveMidulsProcess_AdminUser_27241 \u05E9\u05DE\u05D9\u05E8\u05EA \u05DE\u05D9\u05D3\u05D5\u05DC \u05E2\u05DD \u05E9\u05D3\u05D5\u05EA \u05EA\u05D0\u05E8\u05D9\u05DA \u05DE\u05D9\u05D3\u05E2 \u05E0\u05D5\u05E1\u05E3 \u05D5\u05E9\u05DE\u05D9\u05E8\u05EA \u05EA\u05D9\u05D5\u05D2",
+      "AdoSuite": "Modeling functionality"
+    },
+    {
+      "WorkItemId": 28924,
+      "AdoTitle": "Insert frame details - \u05DE\u05E1\u05DA \u05DB\u05DC\u05DC\u05D9 \u05D1\u05D3\u05D9\u05E7\u05EA \u05E4\u05E8\u05D8\u05D9 \u05DE\u05E1\u05D2\u05E8\u05EA",
+      "AdoSuite": "Modeling functionality"
+    },
+    {
+      "WorkItemId": 30043,
+      "AdoTitle": "\u05E9\u05E8\u05E9\u05D5\u05E8 \u05E9\u05DC \u05E9\u05EA\u05D9 \u05E2\u05DE\u05D5\u05D3\u05D5\u05EA \u05E8\u05D0\u05E9\u05D5\u05E0\u05D5\u05EA  \u05E4\u05E8\u05D9\u05D5\u05D5\u05D9\u05D5 \u05D1\u05D6\u05DE\u05DF \u05D0\u05DE\u05EA \u05D5\u05E1\u05D9\u05DE\u05D5\u05DF \u05DB\u05D7\u05D5\u05DC - Concatenation of Two first Columns \u2013udf Preview",
+      "AdoSuite": "Modeling functionality"
+    },
+    {
+      "WorkItemId": 30045,
+      "AdoTitle": "Clearing a Parameter Value Resets the Preview negative test  - \u05E0\u05D9\u05E7\u05D5\u05D9 \u05E2\u05E8\u05DA \u05E4\u05E8\u05DE\u05D8\u05E8 \u05DE\u05D0\u05E4\u05E1 \u05D0\u05EA \u05D4\u05E4\u05E8\u05D9\u05D5\u05D5\u05D9\u05D5",
+      "AdoSuite": "Modeling functionality"
+    },
+    {
+      "WorkItemId": 30064,
+      "AdoTitle": "Preview Stability Under Rapid Changes - \u05D9\u05E6\u05D9\u05D1\u05D5\u05EA \u05E4\u05E8\u05D9\u05D5\u05D5\u05D9\u05D5 \u05DE\u05D5\u05DC \u05E9\u05D9\u05E0\u05D5\u05D9 \u05DE\u05D4\u05D9\u05E8",
+      "AdoSuite": "Modeling functionality"
+    },
+    {
+      "WorkItemId": 30065,
+      "AdoTitle": "Negative \u2013 Parameter Type Does Not Match Existing Value - \u05E9\u05DC\u05D9\u05DC\u05D9 \u05E1\u05D5\u05D2 \u05E4\u05E8\u05DE\u05D8\u05E8 \u05DC\u05D0 \u05EA\u05D5\u05D0\u05DD \u05E2\u05E8\u05DA \u05E7\u05D9\u05D9\u05DD",
+      "AdoSuite": "Modeling functionality"
+    },
+    {
+      "WorkItemId": 30260,
+      "AdoTitle": "negative test - preview button must be disable",
+      "AdoSuite": "Modeling functionality"
+    },
+    {
+      "WorkItemId": 30897,
+      "AdoTitle": "Modelling Save button is on disable mode when one or more of the fields are empty",
+      "AdoSuite": "Modeling functionality"
+    },
+    {
+      "WorkItemId": 30967,
+      "AdoTitle": "Modelling - Additional info - try to save modelling without filling mandatory fields negative test",
+      "AdoSuite": "Modeling functionality"
+    },
+    {
+      "WorkItemId": 30971,
+      "AdoTitle": "Modelling - Additional info - save draft modelling without filling mandatory fields",
+      "AdoSuite": "Modeling functionality"
+    },
+    {
+      "WorkItemId": 26105,
+      "AdoTitle": "Work Form Comboboxes Items Verification \u05D0\u05D9\u05DE\u05D5\u05EA \u05E4\u05E8\u05D9\u05D8\u05D9 \u05EA\u05D9\u05D1\u05D5\u05EA \u05DE\u05E9\u05D5\u05DC\u05D1\u05D5\u05EA \u05E9\u05DC \u05D8\u05D5\u05E4\u05E1 \u05E2\u05D1\u05D5\u05D3\u05D4",
+      "AdoSuite": "Upload page"
+    },
+    {
+      "WorkItemId": 26106,
+      "AdoTitle": "Loading FromDBE Form Comboboxes Items Verification \u05D8\u05D5\u05E2\u05DF \u05D0\u05D9\u05DE\u05D5\u05EA \u05E4\u05E8\u05D9\u05D8\u05D9 \u05EA\u05D9\u05D1\u05D5\u05EA \u05DE\u05E9\u05D5\u05DC\u05D1\u05D5\u05EA \u05E9\u05DC \u05D8\u05D5\u05E4\u05E1 FromDBE",
+      "AdoSuite": "Upload page"
+    },
+    {
+      "WorkItemId": 26108,
+      "AdoTitle": "Steel Form Comboboxes Items Verification \u05D0\u05D9\u05DE\u05D5\u05EA \u05E4\u05E8\u05D9\u05D8\u05D9\u05DD \u05E9\u05DC \u05E7\u05D5\u05DE\u05E4\u05D5\u05D6\u05D5\u05EA \u05E7\u05D5\u05DE\u05D1\u05D5 \u05D1\u05E6\u05D5\u05E8\u05EA \u05E4\u05DC\u05D3\u05D4",
+      "AdoSuite": "Upload page"
+    },
+    {
+      "WorkItemId": 26130,
+      "AdoTitle": "Disposable Form Comboboxes Items Verification \u05D0\u05D9\u05DE\u05D5\u05EA \u05E4\u05E8\u05D9\u05D8\u05D9\u05DD \u05E9\u05DC \u05EA\u05D9\u05D1\u05D5\u05EA \u05DE\u05E9\u05D5\u05DC\u05D1\u05D5\u05EA \u05DC\u05D8\u05E4\u05E1\u05D9\u05DD \u05D7\u05D3 \u05E4\u05E2\u05DE\u05D9\u05D9\u05DD",
+      "AdoSuite": "Upload page"
+    },
+    {
+      "WorkItemId": 26413,
+      "AdoTitle": "\u05DE\u05E1\u05DA \u05DE\u05D0\u05D2\u05E8 \u05DB\u05DC\u05DC\u05D9 - \u05D8\u05E2\u05D9\u05E0\u05EA \u05DE\u05D0\u05D2\u05E8 - \u05DE\u05E7\u05D5\u05E8 \u05D0\u05D7\u05E8 general screen upload pool other resource",
+      "AdoSuite": "Upload page"
+    },
+    {
+      "WorkItemId": 26414,
+      "AdoTitle": "\u05D4\u05E2\u05DC\u05D0\u05EA \u05E7\u05D5\u05D1\u05E5 \u05DE\u05E1\u05DA \u05DB\u05DC\u05DC\u05D9 general screen with json setting file",
+      "AdoSuite": "Upload page"
+    },
+    {
+      "WorkItemId": 26415,
+      "AdoTitle": "\u05E4\u05DC\u05D3\u05DC\u05EA \u05DE\u05E1\u05DA \u05D8\u05E2\u05D9\u05E0\u05EA \u05DE\u05D0\u05D2\u05E8- steel screen upload pool from db",
+      "AdoSuite": "Upload page"
+    },
+    {
+      "WorkItemId": 26416,
+      "AdoTitle": "\u05D4\u05E2\u05DC\u05D0\u05EA \u05DE\u05D0\u05D2\u05E8 \u05DEVIEW from view upload pool",
+      "AdoSuite": "Upload page"
+    },
+    {
+      "WorkItemId": 26417,
+      "AdoTitle": "\u05D0\u05D9\u05E0\u05D3\u05D5\u05E7\u05E1 \u05EA\u05D9\u05E7\u05D9\u05D9\u05D4 \u05D4\u05E2\u05DC\u05D0\u05EA \u05DE\u05D0\u05D2\u05E8 index folder upload pool with Albums",
+      "AdoSuite": "Upload page"
+    },
+    {
+      "WorkItemId": 26418,
+      "AdoTitle": "work / labor screen upload pool with Xml folder",
+      "AdoSuite": "Upload page"
+    },
+    {
+      "WorkItemId": 26419,
+      "AdoTitle": "upload from DBE screen - \u05D4\u05E2\u05DC\u05D0\u05EA \u05DE\u05D0\u05D2\u05E8 \u05DE\u05D8\u05E2\u05D9\u05E0\u05D4 \u05E9\u05DC DBE",
+      "AdoSuite": "Upload page"
+    },
+    {
+      "WorkItemId": 26420,
+      "AdoTitle": "General form upload pool with CSV folder setting  \u05D4\u05E2\u05DC\u05D0\u05EA \u05DE\u05D0\u05D2\u05E8 \u05DB\u05DC\u05DC\u05D9 \u05E2\u05DD CSV",
+      "AdoSuite": "Upload page"
+    },
+    {
+      "WorkItemId": 26421,
+      "AdoTitle": "GeneralForm_Fill In Fields With Excel Folder Setting File Upload Pool  \u05D4\u05E2\u05DC\u05D0\u05EA \u05DE\u05D0\u05D2\u05E8 \u05DB\u05DC\u05DC\u05D9 \u05E2\u05DD excel folder",
+      "AdoSuite": "Upload page"
+    },
+    {
+      "WorkItemId": 26422,
+      "AdoTitle": "\u05D4\u05E2\u05DC\u05D0\u05EA \u05E7\u05D5\u05D1\u05E5 \u05DE\u05E1\u05DA \u05DB\u05DC\u05DC\u05D9 \u05E2\u05DD XML setting file check",
+      "AdoSuite": "Upload page"
+    },
+    {
+      "WorkItemId": 29371,
+      "AdoTitle": "TestCase creat",
+      "AdoSuite": "JimAutomated"
+    },
+    {
+      "WorkItemId": 29633,
+      "AdoTitle": "Modelling_AddMultiplePanels_CombinedProcess",
+      "AdoSuite": "JimAutomated"
+    },
+    {
+      "WorkItemId": 29729,
+      "AdoTitle": "Column_Text_Finder_Reject_25366",
+      "AdoSuite": "JimAutomated"
+    },
+    {
+      "WorkItemId": 29730,
+      "AdoTitle": "login-form-review.spec.ts / Login and Form Submission E2E \u2014 Login, fill form fields, send to review, and verify review matches form inputs",
+      "AdoSuite": "JimAutomated"
+    },
+    {
+      "WorkItemId": 29960,
+      "AdoTitle": "Column_Text_Finder_Reject_25366",
+      "AdoSuite": "JimAutomated"
+    }
+  ],
+  "UnmatchedAllure": [
+    {
+      "Title": "Modelling_ContentWorldProcess_SaveMidulWithoutSubCategoryfield_NegetiveTest_25293",
+      "FullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling_ContentWorld_AdminTests.Modelling_ContentWorldProcess_SaveMidulWithoutSubCategoryfield_NegetiveTest_25293()",
+      "Uuid": "469c2cc3-7332-4f92-9193-8cbeed0c89ab"
+    },
+    {
+      "Title": "Modelling_SplitProcessWithNumbersLocationSeperator_AllPopUpFieldsShown_29278",
+      "FullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling_SplitTests.Modelling_SplitProcessWithNumbersLocationSeperator_AllPopUpFieldsShown_29278()",
+      "Uuid": "71464925-0bd6-4ca4-ae5e-d82074d5b954"
+    },
+    {
+      "Title": "Modelling_ContentWorldProcess_DeleteSaveTagAndSaveMidul_25302",
+      "FullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling_ContentWorld_AdminTests.Modelling_ContentWorldProcess_DeleteSaveTagAndSaveMidul_25302()",
+      "Uuid": "f0409bb6-00dc-40d1-98cf-e50dc71ed4ca"
+    },
+    {
+      "Title": "Modelling_TopMenu_ConcatenationButtonIsEstablished_25255",
+      "FullName": "Tests:inf_jim_automation_test.Suites.UI.Concatenation.Modelling_ConcatenationTests.Modelling_TopMenu_ConcatenationButtonIsEstablished_25255()",
+      "Uuid": "1b7705ea-39a0-4a7d-9954-d7f5970e55b8"
+    },
+    {
+      "Title": "Modelling_ContentWorldProcess_AddRowInPopUpField_25296",
+      "FullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling_ContentWorld_AdminTests.Modelling_ContentWorldProcess_AddRowInPopUpField_25296()",
+      "Uuid": "e0277ed6-92bf-44de-a008-7502d2c84314"
+    },
+    {
+      "Title": "Modelling_Delete_AfterReplaceProcess_AllPopUpFields_29276",
+      "FullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_ReplaceTests.Modelling_Delete_AfterReplaceProcess_AllPopUpFields_29276()",
+      "Uuid": "8c324ff5-2adc-4d84-aca1-bd3f28b29af1"
+    },
+    {
+      "Title": "Column_Text_Sorting_25422(poolName)",
+      "FullName": "Tests:inf_jim_automation_test.Suites.UI.Search_Table_Page_Tests.Column_Text_Sorting_25422(BusinessCode:BusinessCode.Enums.SearchPage_TableColumns)",
+      "Uuid": "b4ede703-0b06-4930-b1ad-792a8878eb17"
+    },
+    {
+      "Title": "Modelling_Advanced_Filter_Combo_Dynamic_Data_Verification",
+      "FullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_AdvancedFilterTests.Modelling_Advanced_Filter_Combo_Dynamic_Data_Verification()",
+      "Uuid": "b3c6465a-b71a-4b6f-9708-d9bca73dfdd9"
+    },
+    {
+      "Title": "Modelling_Verify_ReplaceProcess_AllPopUpFieldsShown_29276",
+      "FullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_ReplaceTests.Modelling_Verify_ReplaceProcess_AllPopUpFieldsShown_29276()",
+      "Uuid": "a3ed2ce0-163b-47a4-99dc-964c5bc20839"
+    },
+    {
+      "Title": "Modelling_ContentWorldProcess_DeleteSaveTagAndSaveMidul_25302",
+      "FullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling_ContentWorld_AdminTests.Modelling_ContentWorldProcess_DeleteSaveTagAndSaveMidul_25302()",
+      "Uuid": "f50891f5-4c8e-4a14-bac4-221831e27f24"
+    },
+    {
+      "Title": "Modelling_ContentWorldProcess_AddRowInPopUpField_25296",
+      "FullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling_ContentWorld_AdminTests.Modelling_ContentWorldProcess_AddRowInPopUpField_25296()",
+      "Uuid": "7baa4e3e-a82e-4679-8de9-85c0194f9a5b"
+    },
+    {
+      "Title": "Modelling_ConcatenationProcess_AllPopUpFieldsShown_25262",
+      "FullName": "Tests:inf_jim_automation_test.Suites.UI.Concatenation.Modelling_ConcatenationTests.Modelling_ConcatenationProcess_AllPopUpFieldsShown_25262()",
+      "Uuid": "914fabcc-2a19-4543-90fe-d4ac8d05e43f"
+    },
+    {
+      "Title": "Modelling_ContentWorldProcessDeleteAddedRowInPopUpFieldWithoutSaving_PowerUser_25942",
+      "FullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_ContentWorld_PowerUserTests.Modelling_ContentWorldProcessDeleteAddedRowInPopUpFieldWithoutSaving_PowerUser_25942()",
+      "Uuid": "2c2fc832-b268-45d2-92b3-3ba2832434f1"
+    },
+    {
+      "Title": "Modelling_TopMenu_TableMenuOptions_Count",
+      "FullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_TopMenuTests.Modelling_TopMenu_TableMenuOptions_Count()",
+      "Uuid": "31f5a255-a6b3-4ca6-8e78-29e1285c4bac"
+    },
+    {
+      "Title": "Modelling_ContentWorldProcess_VerifyAllPopUpFields_25941",
+      "FullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_ContentWorld_PowerUserTests.Modelling_ContentWorldProcess_VerifyAllPopUpFields_25941()",
+      "Uuid": "ed37e2ab-aac8-415c-9f27-de0326134dfc"
+    },
+    {
+      "Title": "Modelling_Advanced_Filter_Combo_Dynamic_Data_Saving_25226",
+      "FullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_AdvancedFilterTests.Modelling_Advanced_Filter_Combo_Dynamic_Data_Saving_25226()",
+      "Uuid": "e991bac9-cab1-4af0-b9d7-cbdc26d0a5fb"
+    },
+    {
+      "Title": "Modelling_AfterSplitProcess_AllPopUpFieldsDeleted_29278",
+      "FullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling_SplitTests.Modelling_AfterSplitProcess_AllPopUpFieldsDeleted_29278()",
+      "Uuid": "3cc23b2d-6c0a-49a5-8d3b-dbb56b83b5de"
+    },
+    {
+      "Title": "Modelling_ConcatenationProcess_AllPopUpFieldsShown_25262",
+      "FullName": "Tests:inf_jim_automation_test.Suites.UI.Concatenation.Modelling_ConcatenationTests.Modelling_ConcatenationProcess_AllPopUpFieldsShown_25262()",
+      "Uuid": "db6f2435-6af3-41c1-ace8-5923cb7d0d6a"
+    },
+    {
+      "Title": "Modelling_TopMenu_TableMenuOptions_AllExist",
+      "FullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_TopMenuTests.Modelling_TopMenu_TableMenuOptions_AllExist()",
+      "Uuid": "cb391fb4-d8bc-4c54-ad8a-4fe732c6fe20"
+    },
+    {
+      "Title": "Modelling_AfterConcatenationProcess_DeleteAllPopUpFields_26484",
+      "FullName": "Tests:inf_jim_automation_test.Suites.UI.Concatenation.Modelling_ConcatenationTests.Modelling_AfterConcatenationProcess_DeleteAllPopUpFields_26484()",
+      "Uuid": "252a6a3c-4d3f-408b-b479-71bae8a51e48"
+    },
+    {
+      "Title": "Disposable_Form_Comboboxes_Items_Verification_26130",
+      "FullName": "Tests:inf_jim_automation_test.Suites.UI.Upload_Page_Tests.Disposable_Form_Comboboxes_Items_Verification_26130()",
+      "Uuid": "492de618-0c8b-4738-a12d-7a63d6b99257"
+    },
+    {
+      "Title": "Modelling_Verify_ReplaceProcess_WithTheStringField_AllPopUpFieldsShown_29276",
+      "FullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling.Modelling_ReplaceTests.Modelling_Verify_ReplaceProcess_WithTheStringField_AllPopUpFieldsShown_29276()",
+      "Uuid": "0043a312-3a9a-49c6-9235-ad41e803c663"
+    },
+    {
+      "Title": "LoadingFromDBE_Form_FillInFields_UploadPool_26419",
+      "FullName": "Tests:inf_jim_automation_test.Suites.UI.Upload_Page_Tests.LoadingFromDBE_Form_FillInFields_UploadPool_26419()",
+      "Uuid": "36f040e4-9959-46e5-a96d-d294dd4fd66c"
+    }
+  ]
+}

@@ -41,6 +41,12 @@ builder.Services.AddHttpClient<GroqClient>((sp, http) =>
     GroqClient.ConfigureHttpClient(http, apiKey);
 });
 
+builder.Services.AddHttpClient<LocalLlmClient>((sp, http) =>
+{
+    var opts = sp.GetRequiredService<AiOptions>();
+    LocalLlmClient.ConfigureHttpClient(http, opts);
+});
+
 builder.Services.AddHttpClient<LocalEmbeddingClient>((sp, http) =>
 {
     var opts = sp.GetRequiredService<AiOptions>();
@@ -331,13 +337,18 @@ app.MapPost("/test-generator-ts", async (HttpRequest req) =>
 
 app.MapPost("/coverage/calc", async (
     [FromBody] CoverageCalcRequest request,
+    AiOptions aiOptions,
     GroqClient groq,
+    LocalLlmClient localLlm,
     IMemoryCache cache,
     CancellationToken ct) =>
 {
-    var apiKey = Environment.GetEnvironmentVariable("GROQ_API_KEY");
-    if (string.IsNullOrWhiteSpace(apiKey))
-        return Results.BadRequest("GROQ_API_KEY is not set.");
+    if (IsGroqProvider(aiOptions))
+    {
+        var apiKey = Environment.GetEnvironmentVariable("GROQ_API_KEY");
+        if (string.IsNullOrWhiteSpace(apiKey))
+            return Results.BadRequest("GROQ_API_KEY is not set.");
+    }
 
     var reportKey = string.IsNullOrWhiteSpace(request.TeamId) ? null : $"coverage:report:{request.TeamId}";
     var reportTitles = reportKey is null ? null : cache.Get<IReadOnlyList<string>>(reportKey);
@@ -345,7 +356,7 @@ app.MapPost("/coverage/calc", async (
 
     try
     {
-        var result = await groq.ChatAsync(prompt, systemPrompt: null, ct);
+        var result = await ChatAsync(aiOptions, groq, localLlm, prompt, systemPrompt: null, ct);
         return Results.Ok(new { result });
     }
     catch (Exception ex)
@@ -464,6 +475,7 @@ app.MapGet("/coverage/embedding-report", async (
     bool? force,
     int? topK,
     double? minScore,
+    double? dupMinScore,
     bool? llm,
     int? llmMaxMatches,
     int? llmMaxGaps,
@@ -472,6 +484,7 @@ app.MapGet("/coverage/embedding-report", async (
     AiOptions aiOptions,
     LocalEmbeddingClient embeddings,
     GroqClient groq,
+    LocalLlmClient localLlm,
     CancellationToken ct) =>
 {
     if (string.IsNullOrWhiteSpace(teamId))
@@ -525,129 +538,46 @@ app.MapGet("/coverage/embedding-report", async (
         effectiveMinScore,
         effectiveTopK);
 
+    var duplicates = await BuildDuplicateReport(
+        plan,
+        report,
+        teamId,
+        embeddingModel,
+        dupMinScore,
+        force == true,
+        embeddings,
+        webRootPath,
+        ct);
+
     await PersistCoverageEmbeddingReport(result, planId, teamId, webRootPath, ct);
 
     if (llm == true)
     {
-        var apiKey = Environment.GetEnvironmentVariable("GROQ_API_KEY");
-        if (string.IsNullOrWhiteSpace(apiKey))
-            return Results.BadRequest("GROQ_API_KEY is not set.");
+        if (IsGroqProvider(aiOptions))
+        {
+            var apiKey = Environment.GetEnvironmentVariable("GROQ_API_KEY");
+            if (string.IsNullOrWhiteSpace(apiKey))
+                return Results.BadRequest("GROQ_API_KEY is not set.");
+        }
 
-        var maxMatches = llmMaxMatches is > 0 ? llmMaxMatches.Value : 20;
-        var maxGaps = llmMaxGaps is > 0 ? llmMaxGaps.Value : 20;
-        var llmReport = await BuildLlmEmbeddingReport(
+        var maxAdo = llmMaxMatches is > 0 ? llmMaxMatches.Value : 0;
+        var maxAllure = llmMaxGaps is > 0 ? llmMaxGaps.Value : 0;
+        var llmCoverage = await BuildLlmCoverageFromUnmatched(
             plan,
             report,
             result,
+            aiOptions,
             groq,
-            maxMatches,
-            maxGaps,
+            localLlm,
+            maxAdo,
+            maxAllure,
             ct);
 
-        await PersistCoverageEmbeddingLlmReport(llmReport, planId, teamId, webRootPath, ct);
-        return Results.Ok(new { report = result, llm = llmReport });
+        await PersistCoverageEmbeddingLlmCoverageReport(llmCoverage, planId, teamId, webRootPath, ct);
+        return Results.Ok(new { report = result, llmCoverage, duplicates });
     }
 
-    return Results.Ok(result);
-});
-
-app.MapGet("/coverage/pipeline", async (
-    int planId,
-    string teamId,
-    int? sourceWorkItemId,
-    int? topK,
-    int? maxCandidates,
-    double? minScore,
-    bool? llm,
-    int? llmMaxSources,
-    AdoClient client,
-    IMemoryCache cache,
-    AiOptions aiOptions,
-    LocalEmbeddingClient embeddings,
-    GroqClient groq,
-    CancellationToken ct) =>
-{
-    if (string.IsNullOrWhiteSpace(teamId))
-        return Results.BadRequest("teamId is required.");
-
-    var report = await LoadCoverageReportSummary(teamId, webRootPath, cache, ct);
-    var plan = await GetCoverageSummary(
-        planId,
-        testPlanApiVersion: null,
-        witApiVersion: null,
-        force: false,
-        client,
-        cache,
-        webRootPath,
-        ct);
-
-    var adoEntities = NormalizeAdoPlan(plan);
-    var allureEntities = NormalizeAllureReport(report);
-
-    if (sourceWorkItemId is > 0)
-        adoEntities = adoEntities.Where(e => e.Id == sourceWorkItemId.Value.ToString()).ToList();
-
-    var embeddingModel = aiOptions.EmbeddingModel ?? string.Empty;
-    var effectiveTopK = topK is > 0 ? topK.Value : 5;
-    var effectiveMaxCandidates = maxCandidates is > 0 ? maxCandidates.Value : 5;
-    var effectiveMinScore = minScore is > 0 ? minScore.Value : 0.75;
-    var effectiveLlmMaxSources = llmMaxSources is > 0 ? llmMaxSources.Value : 5;
-
-    var embeddingDir = Path.Combine(webRootPath, "coverage");
-    var adoEmbeddingsPath = Path.Combine(embeddingDir, $"embeddings-normalized-ado-plan-{planId}.json");
-    var allureEmbeddingsPath = Path.Combine(embeddingDir, $"embeddings-normalized-allure-{teamId}.json");
-
-    var adoEmbeddingSources = adoEntities.Select(e =>
-        new CoverageEmbeddingSource(e.Id, BuildTextForEmbedding(e))).ToList();
-    var allureEmbeddingSources = allureEntities.Select(e =>
-        new CoverageEmbeddingSource(e.Id, BuildTextForEmbedding(e))).ToList();
-
-    var adoEmbeddings = await GetOrCreateEmbeddingsFile(
-        adoEmbeddingsPath,
-        embeddingModel,
-        adoEmbeddingSources,
-        embeddings,
-        force: false,
-        ct);
-
-    var allureEmbeddings = await GetOrCreateEmbeddingsFile(
-        allureEmbeddingsPath,
-        embeddingModel,
-        allureEmbeddingSources,
-        embeddings,
-        force: false,
-        ct);
-
-    var allureVectors = allureEmbeddings.Items.Select(i => NormalizeVector(i.Vector)).ToList();
-    var allureMap = allureEntities.ToDictionary(e => e.Id, e => e);
-
-    var results = new List<CoveragePipelineResult>();
-    var llmEnabled = llm == true;
-    var llmSourcesUsed = 0;
-
-    foreach (var source in adoEntities)
-    {
-        var ruleMatches = FindRuleMatches(source, allureEntities);
-        var strongRule = ruleMatches.Any(m => m.Score >= 0.99);
-
-        var vectorMatches = strongRule
-            ? new List<VectorMatch>()
-            : FindVectorMatches(source, adoEmbeddings, allureEmbeddings, effectiveTopK, effectiveMinScore);
-
-        var candidates = SelectCandidates(source, allureEntities, ruleMatches, vectorMatches, effectiveMaxCandidates);
-
-        CoverageDecision? decision = null;
-        if (llmEnabled && llmSourcesUsed < effectiveLlmMaxSources)
-        {
-            var payload = BuildLlmPayload(source, candidates);
-            decision = await CompareWithLlm(payload, groq, ct);
-            llmSourcesUsed++;
-        }
-
-        results.Add(new CoveragePipelineResult(source, candidates, ruleMatches, vectorMatches, decision));
-    }
-
-    return Results.Ok(new { count = results.Count, results });
+    return Results.Ok(new { report = result, duplicates });
 });
 
 app.MapGet("/coverage/plan-summary", async (
@@ -1239,11 +1169,403 @@ static async Task PersistCoverageEmbeddingLlmReport(
     await File.WriteAllTextAsync(latestFile, json, ct);
 }
 
+static async Task PersistCoverageEmbeddingLlmCoverageReport(
+    CoverageEmbeddingLlmCoverageReport report,
+    int planId,
+    string teamId,
+    string webRootPath,
+    CancellationToken ct)
+{
+    var coverageDir = Path.Combine(webRootPath, "coverage");
+    Directory.CreateDirectory(coverageDir);
+
+    var json = JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true });
+    var reportFile = Path.Combine(coverageDir, $"coverage-embedding-llm-coverage-report-{planId}-{teamId}.json");
+    var latestFile = Path.Combine(coverageDir, "coverage-embedding-llm-coverage-report.json");
+
+    await File.WriteAllTextAsync(reportFile, json, ct);
+    await File.WriteAllTextAsync(latestFile, json, ct);
+}
+
+static async Task<CoverageEmbeddingLlmCoverageReport> BuildLlmCoverageFromUnmatched(
+    CoveragePlanSummary plan,
+    CoverageAutomationReportSummary report,
+    CoverageEmbeddingReport embeddingReport,
+    AiOptions aiOptions,
+    GroqClient groq,
+    LocalLlmClient localLlm,
+    int maxAdo,
+    int maxAllure,
+    CancellationToken ct)
+{
+    var unmatchedAdo = embeddingReport.UnmatchedAdo;
+    var unmatchedAllure = embeddingReport.UnmatchedAllure;
+
+    if (maxAdo > 0)
+        unmatchedAdo = unmatchedAdo.Take(maxAdo).ToList();
+    if (maxAllure > 0)
+        unmatchedAllure = unmatchedAllure.Take(maxAllure).ToList();
+
+    if (unmatchedAdo.Count == 0 || unmatchedAllure.Count == 0)
+    {
+        return new CoverageEmbeddingLlmCoverageReport(
+            embeddingReport.PlanId,
+            embeddingReport.TeamId,
+            "groq",
+            Array.Empty<CoverageEmbeddingMatch>(),
+            unmatchedAdo.ToList(),
+            unmatchedAllure.ToList());
+    }
+
+    var adoDetails = BuildAdoDetails(plan);
+    var allureDetails = BuildAllureDetails(report);
+    var candidates = BuildLlmAllureCandidates(unmatchedAllure, allureDetails);
+    var candidateLookup = candidates.ToDictionary(c => c.Id, c => c);
+
+    var matches = new List<CoverageEmbeddingMatch>();
+    var matchedAdo = new HashSet<int>();
+    var usedCandidates = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+    const int batchSize = 20;
+    var total = unmatchedAdo.Count;
+    for (var i = 0; i < total; i += batchSize)
+    {
+        var batch = unmatchedAdo.Skip(i).Take(batchSize).ToList();
+        var payload = BuildLlmCoveragePayload(batch, adoDetails, candidates);
+        var response = await CompareUnmatchedWithLlm(aiOptions, payload, groq, localLlm, ct);
+        var decisions = ParseLlmCoverageMatches(response);
+
+        foreach (var d in decisions)
+        {
+            if (d.Decision != "match" || string.IsNullOrWhiteSpace(d.CandidateId))
+                continue;
+
+            if (matchedAdo.Contains(d.WorkItemId))
+                continue;
+            if (usedCandidates.Contains(d.CandidateId))
+                continue;
+            if (!candidateLookup.TryGetValue(d.CandidateId, out var candidate))
+                continue;
+
+            if (!adoDetails.TryGetValue(d.WorkItemId, out var ado))
+                continue;
+
+            matches.Add(new CoverageEmbeddingMatch(
+                d.WorkItemId,
+                ado.Title,
+                ado.Suite,
+                candidate.Title,
+                candidate.FullName,
+                candidate.Uuid,
+                1.0));
+
+            matchedAdo.Add(d.WorkItemId);
+            usedCandidates.Add(d.CandidateId);
+        }
+    }
+
+    var remainingAdo = unmatchedAdo.Where(a => !matchedAdo.Contains(a.WorkItemId)).ToList();
+    var remainingAllure = candidates
+        .Where(c => !usedCandidates.Contains(c.Id))
+        .Select(c => new CoverageEmbeddingUnmatchedAllure(c.Title, c.FullName, c.Uuid))
+        .ToList();
+
+    return new CoverageEmbeddingLlmCoverageReport(
+        embeddingReport.PlanId,
+        embeddingReport.TeamId,
+        "groq",
+        matches,
+        remainingAdo,
+        remainingAllure);
+}
+
+static async Task<CoverageDuplicateReport> BuildDuplicateReport(
+    CoveragePlanSummary plan,
+    CoverageAutomationReportSummary report,
+    string teamId,
+    string embeddingModel,
+    double? dupMinScore,
+    bool force,
+    LocalEmbeddingClient embeddings,
+    string webRootPath,
+    CancellationToken ct)
+{
+    var effectiveMinScore = dupMinScore is > 0 ? dupMinScore.Value : 0.9;
+
+    var adoEntities = NormalizeAdoPlan(plan);
+    var allureEntities = NormalizeAllureReport(report);
+
+    var adoDuplicates = await FindDuplicatesForEntities(
+        adoEntities,
+        embeddingModel,
+        effectiveMinScore,
+        "ado",
+        plan.PlanId.ToString(),
+        force,
+        embeddings,
+        webRootPath,
+        ct);
+
+    var allureDuplicates = await FindDuplicatesForEntities(
+        allureEntities,
+        embeddingModel,
+        effectiveMinScore,
+        "allure",
+        teamId,
+        force,
+        embeddings,
+        webRootPath,
+        ct);
+
+    return new CoverageDuplicateReport(adoDuplicates, allureDuplicates);
+}
+
+static async Task<IReadOnlyList<CoverageDuplicateItem>> FindDuplicatesForEntities(
+    IReadOnlyList<NormalizedEntity> entities,
+    string embeddingModel,
+    double minScore,
+    string scope,
+    string suffix,
+    bool force,
+    LocalEmbeddingClient embeddings,
+    string webRootPath,
+    CancellationToken ct)
+{
+    var duplicates = new List<CoverageDuplicateItem>();
+    if (entities.Count == 0)
+        return duplicates;
+
+    var items = new List<(string Id, string Title, string Steps)>();
+    var usedIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    foreach (var entity in entities)
+    {
+        var baseId = entity.Id;
+        var id = baseId;
+        var suffixIndex = 1;
+        while (!usedIds.Add(id))
+        {
+            id = $"{baseId}:{suffixIndex}";
+            suffixIndex++;
+        }
+
+        items.Add((id, entity.Title, BuildStepsSignature(entity)));
+    }
+    var idToTitle = items.ToDictionary(i => i.Id, i => i.Title, StringComparer.OrdinalIgnoreCase);
+
+    var firstBySteps = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+    var duplicateIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+    for (var i = 0; i < items.Count; i++)
+    {
+        var steps = items[i].Steps;
+        if (string.IsNullOrWhiteSpace(steps))
+            continue;
+
+        var id = items[i].Id;
+        if (firstBySteps.TryGetValue(steps, out var firstId))
+        {
+            duplicates.Add(new CoverageDuplicateItem(
+                id,
+                items[i].Title,
+                firstId,
+                "exact",
+                1.0));
+            duplicateIds.Add(id);
+        }
+        else
+        {
+            firstBySteps[steps] = id;
+        }
+    }
+
+    if (minScore <= 0)
+        return duplicates;
+
+    var sources = new List<CoverageEmbeddingSource>();
+    for (var i = 0; i < items.Count; i++)
+    {
+        var steps = items[i].Steps;
+        if (string.IsNullOrWhiteSpace(steps))
+            continue;
+
+        sources.Add(new CoverageEmbeddingSource(items[i].Id, steps));
+    }
+
+    if (sources.Count == 0)
+        return duplicates;
+
+    var embeddingsDir = Path.Combine(webRootPath, "coverage");
+    var embedPath = Path.Combine(embeddingsDir, $"embeddings-steps-{scope}-{suffix}.json");
+    var embedFile = await GetOrCreateEmbeddingsFile(
+        embedPath,
+        embeddingModel,
+        sources,
+        embeddings,
+        force,
+        ct);
+
+    var vectors = embedFile.Items.Select(i => NormalizeVector(i.Vector)).ToList();
+    var ids = embedFile.Items.Select(i => i.Id).ToList();
+
+    for (var i = 0; i < ids.Count; i++)
+    {
+        var idA = ids[i];
+        if (duplicateIds.Contains(idA))
+            continue;
+
+        for (var j = i + 1; j < ids.Count; j++)
+        {
+            var idB = ids[j];
+            if (duplicateIds.Contains(idB))
+                continue;
+
+            var score = Dot(vectors[i], vectors[j]);
+            if (score < minScore)
+                continue;
+
+            duplicates.Add(new CoverageDuplicateItem(
+                idB,
+                idToTitle[idB],
+                idA,
+                "semantic",
+                Math.Round(score, 4)));
+            duplicateIds.Add(idB);
+        }
+    }
+
+    return duplicates;
+}
+
+static string BuildStepsSignature(NormalizedEntity entity)
+{
+    var parts = entity.Actions.Concat(entity.Assertions).Where(p => !string.IsNullOrWhiteSpace(p)).ToList();
+    if (parts.Count == 0)
+        return string.Empty;
+
+    return NormalizeText(string.Join("\n", parts));
+}
+
+static IReadOnlyList<LlmAllureCandidate> BuildLlmAllureCandidates(
+    IReadOnlyList<CoverageEmbeddingUnmatchedAllure> unmatchedAllure,
+    IReadOnlyList<(string Title, string? FullName, string? Uuid, string Steps)> allureDetails)
+{
+    var lookup = new Dictionary<string, (string Title, string? FullName, string? Uuid, string Steps)>(StringComparer.OrdinalIgnoreCase);
+    foreach (var item in allureDetails)
+    {
+        var key = BuildAllureKey(item.Title, item.FullName, item.Uuid);
+        if (!lookup.ContainsKey(key))
+            lookup[key] = item;
+    }
+
+    var candidates = new List<LlmAllureCandidate>();
+    for (var i = 0; i < unmatchedAllure.Count; i++)
+    {
+        var item = unmatchedAllure[i];
+        var key = BuildAllureKey(item.Title, item.FullName, item.Uuid);
+        var details = lookup.TryGetValue(key, out var found) ? found : (item.Title, item.FullName, item.Uuid, string.Empty);
+        candidates.Add(new LlmAllureCandidate(
+            Id: $"cand:{i}",
+            Title: details.Title,
+            FullName: details.FullName,
+            Uuid: details.Uuid,
+            Steps: details.Item4));
+    }
+
+    return candidates;
+}
+
+static string BuildAllureKey(string title, string? fullName, string? uuid)
+{
+    if (!string.IsNullOrWhiteSpace(uuid))
+        return $"uuid:{uuid}";
+    if (!string.IsNullOrWhiteSpace(fullName))
+        return $"full:{fullName}";
+    return $"title:{title}";
+}
+
+static LlmCoveragePayload BuildLlmCoveragePayload(
+    IReadOnlyList<CoverageEmbeddingUnmatchedAdo> unmatchedAdo,
+    Dictionary<int, (string Title, string Suite, string Steps)> adoDetails,
+    IReadOnlyList<LlmAllureCandidate> candidates)
+{
+    var sources = unmatchedAdo.Select(a =>
+    {
+        adoDetails.TryGetValue(a.WorkItemId, out var details);
+        return (object)new
+        {
+            workItemId = a.WorkItemId,
+            title = a.AdoTitle,
+            suite = a.AdoSuite,
+            steps = details.Steps ?? string.Empty
+        };
+    }).ToList();
+
+    var targetPayloads = candidates.Select(c => (object)new
+    {
+        id = c.Id,
+        title = c.Title,
+        fullName = c.FullName,
+        uuid = c.Uuid,
+        steps = c.Steps ?? string.Empty
+    }).ToList();
+
+    return new LlmCoveragePayload(sources, targetPayloads);
+}
+
+static async Task<string> CompareUnmatchedWithLlm(
+    AiOptions aiOptions,
+    LlmCoveragePayload payload,
+    GroqClient groq,
+    LocalLlmClient localLlm,
+    CancellationToken ct)
+{
+    var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = false });
+    var prompt = $@"You are a QA analyst. For each ADO test decide the best matching automation test, or no match.
+Return JSON only with schema:
+{{ ""matches"": [{{ ""workItemId"": 123, ""candidateId"": ""cand:1"", ""decision"": ""match|no_match"", ""confidence"": 0.0, ""reason"": ""..."" }}] }}
+
+Input:
+{json}";
+
+    return await ChatAsync(aiOptions, groq, localLlm, prompt, systemPrompt: "Return strict JSON only.", ct);
+}
+
+static IReadOnlyList<LlmCoverageDecision> ParseLlmCoverageMatches(string json)
+{
+    try
+    {
+        using var doc = JsonDocument.Parse(json);
+        if (!doc.RootElement.TryGetProperty("matches", out var matchesEl) || matchesEl.ValueKind != JsonValueKind.Array)
+            return Array.Empty<LlmCoverageDecision>();
+
+        var list = new List<LlmCoverageDecision>();
+        foreach (var item in matchesEl.EnumerateArray())
+        {
+            var workItemId = item.TryGetProperty("workItemId", out var idEl) && idEl.TryGetInt32(out var idVal) ? idVal : 0;
+            var candidateId = item.TryGetProperty("candidateId", out var candEl) ? candEl.GetString() : null;
+            var decision = item.TryGetProperty("decision", out var decEl) ? decEl.GetString() ?? "no_match" : "no_match";
+            var confidence = item.TryGetProperty("confidence", out var confEl) && confEl.TryGetDouble(out var confVal) ? confVal : 0;
+            var reason = item.TryGetProperty("reason", out var reasonEl) ? reasonEl.GetString() ?? string.Empty : string.Empty;
+            if (workItemId > 0)
+                list.Add(new LlmCoverageDecision(workItemId, candidateId, decision, confidence, reason));
+        }
+
+        return list;
+    }
+    catch
+    {
+        return Array.Empty<LlmCoverageDecision>();
+    }
+}
+
+
 static async Task<CoverageEmbeddingLlmReport> BuildLlmEmbeddingReport(
     CoveragePlanSummary plan,
     CoverageAutomationReportSummary report,
     CoverageEmbeddingReport embeddingReport,
+    AiOptions aiOptions,
     GroqClient groq,
+    LocalLlmClient localLlm,
     int maxMatches,
     int maxGaps,
     CancellationToken ct)
@@ -1252,7 +1574,9 @@ static async Task<CoverageEmbeddingLlmReport> BuildLlmEmbeddingReport(
         plan,
         report,
         embeddingReport.Matches.Take(maxMatches).ToList(),
+        aiOptions,
         groq,
+        localLlm,
         ct);
 
     var gapResult = await ExplainGapsWithLlm(
@@ -1260,7 +1584,9 @@ static async Task<CoverageEmbeddingLlmReport> BuildLlmEmbeddingReport(
         report,
         embeddingReport.UnmatchedAdo.Take(maxGaps).ToList(),
         embeddingReport.UnmatchedAllure.Take(maxGaps).ToList(),
+        aiOptions,
         groq,
+        localLlm,
         ct);
 
     var tokenUsage = new CoverageLlmTokenUsage(
@@ -1282,7 +1608,9 @@ static async Task<(IReadOnlyList<CoverageLlmMatchReview> Reviews, CoverageLlmTok
     CoveragePlanSummary plan,
     CoverageAutomationReportSummary report,
     IReadOnlyList<CoverageEmbeddingMatch> matches,
+    AiOptions aiOptions,
     GroqClient groq,
+    LocalLlmClient localLlm,
     CancellationToken ct)
 {
     if (matches.Count == 0)
@@ -1320,7 +1648,7 @@ Return JSON only with schema:
 Input:
 {payload}";
 
-    var response = await groq.ChatWithUsageAsync(prompt, systemPrompt: "Return strict JSON only.", ct);
+    var response = await ChatWithUsageAsync(aiOptions, groq, localLlm, prompt, systemPrompt: "Return strict JSON only.", ct);
     var reviews = ParseLlmReviews(response.Content);
     var usage = new CoverageLlmTokenUsage(response.PromptTokens, response.CompletionTokens, response.TotalTokens);
     return (reviews, usage);
@@ -1331,7 +1659,9 @@ static async Task<(IReadOnlyList<CoverageLlmGapExplanation> Explanations, IReadO
     CoverageAutomationReportSummary report,
     IReadOnlyList<CoverageEmbeddingUnmatchedAdo> unmatchedAdo,
     IReadOnlyList<CoverageEmbeddingUnmatchedAllure> unmatchedAllure,
+    AiOptions aiOptions,
     GroqClient groq,
+    LocalLlmClient localLlm,
     CancellationToken ct)
 {
     if (unmatchedAdo.Count == 0 && unmatchedAllure.Count == 0)
@@ -1377,7 +1707,7 @@ Return JSON only with schema:
 Input:
 {payload}";
 
-    var response = await groq.ChatWithUsageAsync(prompt, systemPrompt: "Return strict JSON only.", ct);
+    var response = await ChatWithUsageAsync(aiOptions, groq, localLlm, prompt, systemPrompt: "Return strict JSON only.", ct);
     var (gaps, missingTests) = ParseLlmGaps(response.Content);
     var usage = new CoverageLlmTokenUsage(response.PromptTokens, response.CompletionTokens, response.TotalTokens);
     return (gaps, missingTests, usage);
@@ -1490,10 +1820,14 @@ static List<(string Title, string? FullName, string? Uuid, string Steps)> BuildA
 static IReadOnlyList<NormalizedEntity> NormalizeAdoPlan(CoveragePlanSummary plan)
 {
     var output = new List<NormalizedEntity>();
+    var seen = new HashSet<int>();
     foreach (var suite in plan.Suites)
     {
         foreach (var test in suite.Tests)
         {
+            if (!seen.Add(test.WorkItemId))
+                continue;
+
             var (actions, assertions) = SplitActionsAndAssertions(test.Steps);
             output.Add(new NormalizedEntity(
                 test.WorkItemId.ToString(),
@@ -1572,180 +1906,6 @@ static (IReadOnlyList<string> Actions, IReadOnlyList<string> Assertions) SplitAc
     return (actions, assertions);
 }
 
-static IReadOnlyList<RuleMatch> FindRuleMatches(
-    NormalizedEntity source,
-    IReadOnlyList<NormalizedEntity> targets)
-{
-    var matches = new List<RuleMatch>();
-    var sourceId = source.Id;
-    var normalizedSourceTitle = NormalizeTitle(source.Title);
-
-    foreach (var target in targets)
-    {
-        if (string.Equals(sourceId, target.Id, StringComparison.OrdinalIgnoreCase))
-        {
-            matches.Add(new RuleMatch(source.Id, target.Id, "exact_id", 1.0));
-            continue;
-        }
-
-        if (TitleContainsId(target.Title, sourceId))
-            matches.Add(new RuleMatch(source.Id, target.Id, "id_in_title", 0.98));
-
-        var normalizedTargetTitle = NormalizeTitle(target.Title);
-        if (!string.IsNullOrWhiteSpace(normalizedSourceTitle)
-            && normalizedSourceTitle == normalizedTargetTitle)
-        {
-            matches.Add(new RuleMatch(source.Id, target.Id, "title_exact", 0.95));
-        }
-
-        if (!string.IsNullOrWhiteSpace(source.Feature)
-            && !string.IsNullOrWhiteSpace(target.Feature)
-            && string.Equals(source.Feature, target.Feature, StringComparison.OrdinalIgnoreCase))
-        {
-            var overlap = KeywordOverlap(source, target);
-            if (overlap >= 0.6)
-                matches.Add(new RuleMatch(source.Id, target.Id, "feature_keyword_overlap", overlap));
-        }
-    }
-
-    return matches;
-}
-
-static IReadOnlyList<VectorMatch> FindVectorMatches(
-    NormalizedEntity source,
-    CoverageEmbeddingFile sourceEmbeddings,
-    CoverageEmbeddingFile targetEmbeddings,
-    int topK,
-    double minScore)
-{
-    var sourceItem = sourceEmbeddings.Items.FirstOrDefault(i => i.Id == source.Id);
-    if (sourceItem is null)
-        return Array.Empty<VectorMatch>();
-
-    var sourceVector = NormalizeVector(sourceItem.Vector);
-    var matches = new List<VectorMatch>();
-
-    foreach (var target in targetEmbeddings.Items)
-    {
-        var score = Dot(sourceVector, NormalizeVector(target.Vector));
-        if (score >= minScore)
-            matches.Add(new VectorMatch(source.Id, target.Id, score));
-    }
-
-    return matches
-        .OrderByDescending(m => m.Score)
-        .Take(topK)
-        .ToList();
-}
-
-static IReadOnlyList<CandidateEntity> SelectCandidates(
-    NormalizedEntity source,
-    IReadOnlyList<NormalizedEntity> targets,
-    IReadOnlyList<RuleMatch> ruleMatches,
-    IReadOnlyList<VectorMatch> vectorMatches,
-    int maxCandidates)
-{
-    var targetLookup = targets.ToDictionary(t => t.Id, t => t);
-    var combined = new Dictionary<string, CandidateEntity>(StringComparer.OrdinalIgnoreCase);
-
-    foreach (var rule in ruleMatches)
-    {
-        if (!targetLookup.TryGetValue(rule.TargetId, out var target))
-            continue;
-
-        combined[rule.TargetId] = new CandidateEntity(target, "rule", rule.Score);
-    }
-
-    foreach (var vector in vectorMatches)
-    {
-        if (!targetLookup.TryGetValue(vector.TargetId, out var target))
-            continue;
-
-        if (combined.TryGetValue(vector.TargetId, out var existing))
-        {
-            combined[vector.TargetId] = new CandidateEntity(
-                existing.Entity,
-                "rule+embedding",
-                Math.Max(existing.Score, vector.Score));
-        }
-        else
-        {
-            combined[vector.TargetId] = new CandidateEntity(target, "embedding", vector.Score);
-        }
-    }
-
-    return combined.Values
-        .OrderByDescending(c => c.Score)
-        .Take(maxCandidates)
-        .ToList();
-}
-
-static LlmComparePayload BuildLlmPayload(NormalizedEntity source, IReadOnlyList<CandidateEntity> candidates)
-{
-    var sourcePayload = new LlmSourcePayload(
-        source.Id,
-        source.Type,
-        source.Title,
-        source.Feature,
-        source.Screen,
-        TruncateList(source.Actions, 10),
-        TruncateList(source.Assertions, 10),
-        TruncateList(source.Behaviors, 10));
-
-    var candidatePayloads = candidates.Select(c =>
-        new LlmCandidatePayload(
-            c.Entity.Id,
-            c.Entity.Type,
-            c.MatchOrigin,
-            c.Score,
-            c.Entity.Title,
-            c.Entity.Feature,
-            c.Entity.Screen,
-            TruncateList(c.Entity.Actions, 10),
-            TruncateList(c.Entity.Assertions, 10),
-            TruncateList(c.Entity.Behaviors, 10)))
-        .ToList();
-
-    return new LlmComparePayload(sourcePayload, candidatePayloads);
-}
-
-static async Task<CoverageDecision> CompareWithLlm(
-    LlmComparePayload payload,
-    GroqClient groq,
-    CancellationToken ct)
-{
-    var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = false });
-    var prompt = $@"You are a QA analyst. Compare source vs candidates and decide coverage.
-Return JSON only:
-{{ ""bestMatchId"": ""id-or-null"", ""coverage"": ""full|partial|none"", ""confidence"": 0.0, ""coveredSourceSteps"": [1], ""missingSourceSteps"": [2], ""notes"": [""...""] }}
-
-Input:
-{json}";
-
-    var response = await groq.ChatAsync(prompt, systemPrompt: "Return strict JSON only.", ct);
-    return ParseCoverageDecision(payload.Source.Id, response);
-}
-
-static CoverageDecision ParseCoverageDecision(string sourceId, string json)
-{
-    try
-    {
-        using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
-        var bestMatchId = root.TryGetProperty("bestMatchId", out var bestEl) ? bestEl.GetString() : null;
-        var coverage = root.TryGetProperty("coverage", out var covEl) ? covEl.GetString() ?? "none" : "none";
-        var confidence = root.TryGetProperty("confidence", out var confEl) && confEl.TryGetDouble(out var confVal) ? confVal : 0;
-        var covered = ReadIntArray(root, "coveredSourceSteps");
-        var missing = ReadIntArray(root, "missingSourceSteps");
-        var notes = ReadStringArray(root, "notes");
-        return new CoverageDecision(sourceId, bestMatchId, coverage, confidence, covered, missing, notes);
-    }
-    catch
-    {
-        return new CoverageDecision(sourceId, null, "none", 0, Array.Empty<int>(), Array.Empty<int>(), Array.Empty<string>());
-    }
-}
-
 static IReadOnlyList<int> ReadIntArray(JsonElement root, string name)
 {
     if (!root.TryGetProperty(name, out var arr) || arr.ValueKind != JsonValueKind.Array)
@@ -1818,6 +1978,56 @@ static bool TitleContainsId(string title, string id)
     return Regex.IsMatch(title, pattern, RegexOptions.IgnoreCase);
 }
 
+static bool IsGroqRateLimit(Exception ex)
+{
+    if (ex is InvalidOperationException inv && inv.Message.Contains("rate_limit_exceeded", StringComparison.OrdinalIgnoreCase))
+        return true;
+
+    if (ex.Message.Contains("429", StringComparison.OrdinalIgnoreCase))
+        return true;
+
+    return false;
+}
+
+static bool IsGroqProvider(AiOptions options)
+{
+    return string.Equals(options.Provider, "groq", StringComparison.OrdinalIgnoreCase);
+}
+
+static bool IsLocalProvider(AiOptions options)
+{
+    return string.Equals(options.Provider, "local", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(options.Provider, "ollama", StringComparison.OrdinalIgnoreCase);
+}
+
+static async Task<string> ChatAsync(
+    AiOptions options,
+    GroqClient groq,
+    LocalLlmClient localLlm,
+    string userPrompt,
+    string? systemPrompt,
+    CancellationToken ct)
+{
+    if (IsLocalProvider(options))
+        return await localLlm.ChatAsync(userPrompt, systemPrompt, ct);
+
+    return await groq.ChatAsync(userPrompt, systemPrompt, ct);
+}
+
+static async Task<GroqChatResult> ChatWithUsageAsync(
+    AiOptions options,
+    GroqClient groq,
+    LocalLlmClient localLlm,
+    string userPrompt,
+    string? systemPrompt,
+    CancellationToken ct)
+{
+    if (IsLocalProvider(options))
+        return await localLlm.ChatWithUsageAsync(userPrompt, systemPrompt, ct);
+
+    return await groq.ChatWithUsageAsync(userPrompt, systemPrompt, ct);
+}
+
 static double KeywordOverlap(NormalizedEntity a, NormalizedEntity b)
 {
     var aTokens = TokenizeKeywords(a);
@@ -1840,3 +2050,21 @@ static HashSet<string> TokenizeKeywords(NormalizedEntity entity)
 app.Run();
 
 public sealed record SyncFolderRequest(string AllureResultsPath, int? PlanId, int? SuiteId);
+
+sealed record LlmCoveragePayload(
+    IReadOnlyList<object> UnmatchedAdo,
+    IReadOnlyList<object> Candidates);
+
+sealed record LlmAllureCandidate(
+    string Id,
+    string Title,
+    string? FullName,
+    string? Uuid,
+    string Steps);
+
+sealed record LlmCoverageDecision(
+    int WorkItemId,
+    string? CandidateId,
+    string Decision,
+    double Confidence,
+    string Reason);

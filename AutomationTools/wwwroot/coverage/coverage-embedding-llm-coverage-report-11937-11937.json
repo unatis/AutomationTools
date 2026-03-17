@@ -1,0 +1,39 @@
+{
+  "PlanId": 11937,
+  "TeamId": "11937",
+  "Model": "groq",
+  "Matches": [
+    {
+      "WorkItemId": 798,
+      "AdoTitle": "Run all automation test",
+      "AdoSuite": "Regression tests",
+      "AllureTitle": "Modelling_SplitProcessWithNumbersLocationSeperator_AllPopUpFieldsShown_29278",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling_SplitTests.Modelling_SplitProcessWithNumbersLocationSeperator_AllPopUpFieldsShown_29278()",
+      "AllureUuid": "71464925-0bd6-4ca4-ae5e-d82074d5b954",
+      "Score": 1
+    },
+    {
+      "WorkItemId": 3767,
+      "AdoTitle": "Hide filter row on small view ports",
+      "AdoSuite": "Site",
+      "AllureTitle": "Modelling_ContentWorldProcess_SaveMidulWithoutSubCategoryfield_NegetiveTest_25293",
+      "AllureFullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling_ContentWorld_AdminTests.Modelling_ContentWorldProcess_SaveMidulWithoutSubCategoryfield_NegetiveTest_25293()",
+      "AllureUuid": "469c2cc3-7332-4f92-9193-8cbeed0c89ab",
+      "Score": 1
+    }
+  ],
+  "UnmatchedAdo": [
+    {
+      "WorkItemId": 3947,
+      "AdoTitle": "separation from name and imsi number on table on main grid",
+      "AdoSuite": "Site"
+    }
+  ],
+  "UnmatchedAllure": [
+    {
+      "Title": "Modelling_ContentWorldProcess_DeleteSaveTagAndSaveMidul_25302",
+      "FullName": "Tests:inf_jim_automation_test.Suites.UI.Modelling_ContentWorld_AdminTests.Modelling_ContentWorldProcess_DeleteSaveTagAndSaveMidul_25302()",
+      "Uuid": "f0409bb6-00dc-40d1-98cf-e50dc71ed4ca"
+    }
+  ]
+}

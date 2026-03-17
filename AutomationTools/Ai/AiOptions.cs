@@ -10,4 +10,5 @@ public sealed class AiOptions
     public string? EmbeddingProvider { get; set; }
     public string? EmbeddingModel { get; set; }
     public string? EmbeddingBaseUrl { get; set; }
+    public string? LlmBaseUrl { get; set; }
 }

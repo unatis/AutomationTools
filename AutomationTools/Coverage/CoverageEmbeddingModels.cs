@@ -77,6 +77,25 @@ public sealed record CoverageEmbeddingLlmReport(
     IReadOnlyList<CoverageLlmGapExplanation> GapExplanations,
     IReadOnlyList<CoverageLlmMissingTest> MissingTests);
 
+public sealed record CoverageEmbeddingLlmCoverageReport(
+    int PlanId,
+    string TeamId,
+    string Model,
+    IReadOnlyList<CoverageEmbeddingMatch> Matches,
+    IReadOnlyList<CoverageEmbeddingUnmatchedAdo> UnmatchedAdo,
+    IReadOnlyList<CoverageEmbeddingUnmatchedAllure> UnmatchedAllure);
+
+public sealed record CoverageDuplicateItem(
+    string Id,
+    string Title,
+    string DuplicateOfId,
+    string Kind,
+    double Score);
+
+public sealed record CoverageDuplicateReport(
+    IReadOnlyList<CoverageDuplicateItem> AdoDuplicates,
+    IReadOnlyList<CoverageDuplicateItem> AllureDuplicates);
+
 public sealed record CoverageLlmTokenUsage(
     int PromptTokens,
     int CompletionTokens,

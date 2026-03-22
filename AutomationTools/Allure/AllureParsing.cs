@@ -13,21 +13,6 @@ public static class AllureParsing
 
     private static readonly Regex NameWithIdRegex = new(@"^(?<id>\d+?)_(?<title>.+)$", RegexOptions.Compiled);
 
-    public static IReadOnlyList<string> FindResultJsonFiles(string allureResultsDirectory)
-    {
-        if (!Directory.Exists(allureResultsDirectory))
-            throw new DirectoryNotFoundException($"Allure results directory not found: {allureResultsDirectory}");
-
-        return Directory.GetFiles(allureResultsDirectory, "*-result.json", SearchOption.TopDirectoryOnly);
-    }
-
-    public static AllureResult ParseResultFile(string filePath)
-    {
-        var json = File.ReadAllText(filePath, Encoding.UTF8);
-        var result = ParseResultJson(json);
-        return result ?? throw new InvalidOperationException($"Failed to parse Allure JSON: {filePath}");
-    }
-
     public static AllureResult ParseResultJson(string json)
     {
         var result = JsonSerializer.Deserialize<AllureResult>(json, JsonOptions);

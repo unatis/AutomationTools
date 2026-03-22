@@ -11,4 +11,6 @@ public sealed class AiOptions
     public string? EmbeddingModel { get; set; }
     public string? EmbeddingBaseUrl { get; set; }
     public string? LlmBaseUrl { get; set; }
+    public int LlmTimeoutSeconds { get; set; } = 300;
+    public int EmbeddingTimeoutSeconds { get; set; } = 300;
 }

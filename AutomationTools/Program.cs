@@ -4,8 +4,6 @@ using Microsoft.Extensions.Options;
 using AutomationTools.Ado;
 using AutomationTools.Sync;
 using AutomationTools.Allure;
-using AutomationTools.Playwright;
-using AutomationTools.Recording;
 using AutomationTools.TestGenerator;
 using AutomationTools.Ai;
 using AutomationTools.Coverage;
@@ -13,6 +11,7 @@ using System.Text;
 using System.Text.Json;
 using System.IO.Compression;
 using System.Text.RegularExpressions;
+using System.Collections.Concurrent;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,6 +36,9 @@ builder.Services.AddHttpClient<AdoClient>((sp, http) =>
 
 builder.Services.AddHttpClient<GroqClient>((sp, http) =>
 {
+    var opts = sp.GetRequiredService<AiOptions>();
+    if (opts.LlmTimeoutSeconds > 0)
+        http.Timeout = TimeSpan.FromSeconds(opts.LlmTimeoutSeconds);
     var apiKey = Environment.GetEnvironmentVariable("GROQ_API_KEY");
     GroqClient.ConfigureHttpClient(http, apiKey);
 });
@@ -44,18 +46,20 @@ builder.Services.AddHttpClient<GroqClient>((sp, http) =>
 builder.Services.AddHttpClient<LocalLlmClient>((sp, http) =>
 {
     var opts = sp.GetRequiredService<AiOptions>();
+    if (opts.LlmTimeoutSeconds > 0)
+        http.Timeout = TimeSpan.FromSeconds(opts.LlmTimeoutSeconds);
     LocalLlmClient.ConfigureHttpClient(http, opts);
 });
 
 builder.Services.AddHttpClient<LocalEmbeddingClient>((sp, http) =>
 {
     var opts = sp.GetRequiredService<AiOptions>();
+    if (opts.EmbeddingTimeoutSeconds > 0)
+        http.Timeout = TimeSpan.FromSeconds(opts.EmbeddingTimeoutSeconds);
     LocalEmbeddingClient.ConfigureHttpClient(http, opts);
 });
 
 builder.Services.AddSingleton<AllureToAdoSyncService>();
-builder.Services.AddSingleton<RecordingToAdoSyncService>();
-builder.Services.AddSingleton<PlaywrightJsonToAdoSyncService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -66,6 +70,8 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 app.UseStaticFiles();
+
+var RequirementsJobs = new ConcurrentDictionary<string, RequirementsJob>();
 
 // Friendly default route so browser launch doesn't 404.
 app.MapGet("/", () => Results.Redirect("/main.html"));
@@ -145,9 +151,9 @@ app.MapGet("/debug/suite-testcases-raw", async (
     return Results.Ok(new { planId = p, suiteId = s, raw = truncated });
 });
 
-// Sync from raw Allure JSON sent in request body (object or array of objects).
-// planId/suiteId are provided via query string, e.g. POST /sync?planId=11937&suiteId=12115
-app.MapPost("/sync", async (
+// Sync from Allure results ZIP (multipart): extracts *-result.json entries and syncs to ADO.
+// POST /sync-allure-zip?planId=11937&suiteId=29357&configurationId=2
+app.MapPost("/sync-allure-zip", async (
     HttpRequest http,
     int? planId,
     int? suiteId,
@@ -158,104 +164,40 @@ app.MapPost("/sync", async (
     AllureToAdoSyncService sync,
     CancellationToken ct) =>
 {
-    using var doc = await JsonDocument.ParseAsync(http.Body, cancellationToken: ct);
+    if (!http.HasFormContentType)
+        return Results.BadRequest("Expected multipart/form-data with a ZIP file.");
 
-    List<AllureResult> results;
-    if (doc.RootElement.ValueKind == JsonValueKind.Object)
-    {
-        var one = doc.RootElement.Deserialize<AllureResult>();
-        results = one is null ? new() : new() { one };
-    }
-    else if (doc.RootElement.ValueKind == JsonValueKind.Array)
-    {
-        results = doc.RootElement.Deserialize<List<AllureResult>>() ?? new();
-    }
-    else
-    {
-        return Results.BadRequest("Body must be an Allure result.json object or an array of such objects.");
-    }
+    var form = await http.ReadFormAsync(ct);
+    var file = form.Files.FirstOrDefault();
+    if (file is null || file.Length == 0)
+        return Results.BadRequest("ZIP file is required.");
 
-    var summary = await sync.SyncFromAllureResults(
-        allureResults: results,
-        planId: planId,
-        suiteId: suiteId,
-        configurationId: configurationId,
-        apiVersions: new ApiVersionOverrides(witApiVersion, testPlanApiVersion, testApiVersion),
-        ct: ct);
-
-    return Results.Ok(summary);
-});
-
-// Sync from browser recording JSON (test.name + test.steps[]).
-// planId/suiteId/configurationId are provided via query string, e.g.:
-// POST /sync-recording?planId=11937&suiteId=29357&configurationId=2
-app.MapPost("/sync-recording", async (
-    [FromBody] RecordingPayload payload,
-    int? planId,
-    int? suiteId,
-    int? configurationId,
-    string? witApiVersion,
-    string? testPlanApiVersion,
-    string? testApiVersion,
-    RecordingToAdoSyncService sync,
-    CancellationToken ct) =>
-{
-    var summary = await sync.SyncFromRecording(
-        payload: payload,
-        planId: planId,
-        suiteId: suiteId,
-        configurationId: configurationId,
-        apiVersions: new ApiVersionOverrides(witApiVersion, testPlanApiVersion, testApiVersion),
-        ct: ct);
-
-    return Results.Ok(summary);
-});
-
-// Legacy endpoint: sync from a local folder containing *-result.json files
-app.MapPost("/sync-folder", async ([FromBody] SyncFolderRequest request, AllureToAdoSyncService sync, CancellationToken ct) =>
-{
-    var summary = await sync.SyncFromAllureResultsDirectory(
-        allureResultsPath: request.AllureResultsPath,
-        planId: request.PlanId,
-        suiteId: request.SuiteId,
-        configurationId: null,
-        apiVersions: null,
-        ct: ct);
-
-    return Results.Ok(summary);
-});
-
-// Sync from Playwright JSON report (results.json) sent in request body.
-// planId/suiteId/configurationId are provided via query string, e.g.:
-// POST /sync-playwright-json?planId=11937&suiteId=29357&configurationId=2
-app.MapPost("/sync-playwright-json", async (
-    HttpRequest http,
-    int? planId,
-    int? suiteId,
-    int? configurationId,
-    string? witApiVersion,
-    string? testPlanApiVersion,
-    string? testApiVersion,
-    PlaywrightJsonToAdoSyncService sync,
-    CancellationToken ct) =>
-{
-    using var doc = await JsonDocument.ParseAsync(http.Body, cancellationToken: ct);
-    if (doc.RootElement.ValueKind != JsonValueKind.Object)
-        return Results.BadRequest("Body must be a Playwright JSON report object.");
-
-    PlaywrightReport report;
+    var results = new List<AllureResult>();
     try
     {
-        var json = doc.RootElement.GetRawText();
-        report = sync.ParseReportJson(json);
+        using var archive = new ZipArchive(file.OpenReadStream(), ZipArchiveMode.Read, leaveOpen: false);
+        foreach (var entry in archive.Entries)
+        {
+            if (!entry.Name.EndsWith("-result.json", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            using var stream = entry.Open();
+            using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+            var json = await reader.ReadToEndAsync(ct);
+            var result = AllureParsing.ParseResultJson(json);
+            results.Add(result);
+        }
     }
     catch (Exception ex)
     {
-        return Results.BadRequest($"Failed to parse Playwright JSON: {ex.Message}");
+        return Results.BadRequest($"Failed to parse ZIP: {ex.Message}");
     }
 
-    var summary = await sync.SyncFromPlaywrightReport(
-        report: report,
+    if (results.Count == 0)
+        return Results.BadRequest("ZIP does not contain any *-result.json files.");
+
+    var summary = await sync.SyncFromAllureResults(
+        allureResults: results,
         planId: planId,
         suiteId: suiteId,
         configurationId: configurationId,
@@ -467,6 +409,108 @@ app.MapPost("/coverage/report-zip", async (
     return Results.Ok(new { ok = true, count = titles.Count, report });
 });
 
+app.MapPost("/requirements/test-cases", async (
+    [FromBody] RequirementsTestCasesRequest request,
+    AiOptions aiOptions,
+    GroqClient groq,
+    LocalLlmClient localLlm,
+    CancellationToken ct) =>
+{
+    if (string.IsNullOrWhiteSpace(request.Text))
+        return Results.BadRequest("Text is required.");
+
+    var requirements = ExtractRequirementsFromText(request.Text);
+    if (requirements.Count == 0)
+        return Results.BadRequest("No requirements found in the text.");
+
+    var indexed = requirements.Select((text, index) => new RequirementItem($"R{index + 1}", text)).ToList();
+    var (testCases, notApplicable) = await GenerateTestCasesAsync(
+        indexed,
+        aiOptions,
+        groq,
+        localLlm,
+        ct,
+        progress: null);
+
+    return Results.Ok(new { testCases, notApplicable });
+});
+
+app.MapPost("/requirements/test-cases/async", async (
+    [FromBody] RequirementsTestCasesRequest request,
+    AiOptions aiOptions,
+    GroqClient groq,
+    LocalLlmClient localLlm,
+    CancellationToken ct) =>
+{
+    if (string.IsNullOrWhiteSpace(request.Text))
+        return Results.BadRequest("Text is required.");
+
+    var requirements = ExtractRequirementsFromText(request.Text);
+    if (requirements.Count == 0)
+        return Results.BadRequest("No requirements found in the text.");
+
+    var indexed = requirements.Select((text, index) => new RequirementItem($"R{index + 1}", text)).ToList();
+    var job = RequirementsJob.Create(indexed.Count);
+    RequirementsJobs[job.Id] = job;
+
+    _ = Task.Run(async () =>
+    {
+        try
+        {
+            job.Status = "running";
+            var (testCases, notApplicable) = await GenerateTestCasesAsync(
+                indexed,
+                aiOptions,
+                groq,
+                localLlm,
+                CancellationToken.None,
+                (completed, total) =>
+                {
+                    job.Completed = completed;
+                    job.Total = total;
+                });
+            job.TestCases = testCases;
+            job.NotApplicable = notApplicable;
+            job.Status = "completed";
+            try
+            {
+                var webRootPath = string.IsNullOrWhiteSpace(app.Environment.WebRootPath)
+                    ? Path.Combine(app.Environment.ContentRootPath, "wwwroot")
+                    : app.Environment.WebRootPath;
+                await PersistRequirementsTestCasesJson(job, webRootPath, CancellationToken.None);
+            }
+            catch (Exception ex)
+            {
+                app.Logger.LogError(ex, "Failed to persist requirements test cases for job {JobId}.", job.Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            job.Error = ex.Message;
+            job.Status = "failed";
+        }
+    });
+
+    return Results.Ok(new { jobId = job.Id });
+});
+
+app.MapGet("/requirements/test-cases/async/{jobId}", (string jobId) =>
+{
+    if (!RequirementsJobs.TryGetValue(jobId, out var job))
+        return Results.NotFound();
+
+    return Results.Ok(new
+    {
+        jobId = job.Id,
+        status = job.Status,
+        total = job.Total,
+        completed = job.Completed,
+        testCases = job.TestCases,
+        notApplicable = job.NotApplicable,
+        error = job.Error
+    });
+});
+
 app.MapGet("/coverage/embedding-report", async (
     int planId,
     string teamId,
@@ -625,6 +669,7 @@ app.MapGet("/coverage/export", async (
     return Results.File(bytes, "application/json", fileName);
 });
 
+
 static async Task<CoveragePlanSummary> GetCoverageSummary(
     int planId,
     string? testPlanApiVersion,
@@ -704,6 +749,33 @@ static async Task PersistCoverageReportJson(
 
     await File.WriteAllTextAsync(reportFile, json, ct);
     await File.WriteAllTextAsync(latestFile, json, ct);
+}
+
+static async Task PersistRequirementsTestCasesJson(
+    RequirementsJob job,
+    string webRootPath,
+    CancellationToken ct)
+{
+    var coverageDir = Path.Combine(webRootPath, "coverage");
+    Directory.CreateDirectory(coverageDir);
+
+    var payload = new
+    {
+        jobId = job.Id,
+        status = job.Status,
+        total = job.Total,
+        completed = job.Completed,
+        testCases = job.TestCases ?? new List<GeneratedTestCase>(),
+        notApplicable = job.NotApplicable ?? new List<NotApplicableItem>(),
+        error = job.Error
+    };
+    var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });
+    var jobFile = Path.Combine(coverageDir, $"requirements-test-cases-{job.Id}.json");
+    await File.WriteAllTextAsync(jobFile, json, ct);
+
+    var latestJson = JsonSerializer.Serialize(payload.testCases, new JsonSerializerOptions { WriteIndented = true });
+    var latestFile = Path.Combine(coverageDir, "requirements-test-cases-latest.json");
+    await File.WriteAllTextAsync(latestFile, latestJson, ct);
 }
 
 static async Task<CoverageAutomationReportSummary> LoadCoverageReportSummary(
@@ -1933,6 +2005,184 @@ static IReadOnlyList<string> ReadStringArray(JsonElement root, string name)
     return list;
 }
 
+static IReadOnlyList<string> ExtractRequirementsFromText(string text)
+{
+    if (string.IsNullOrWhiteSpace(text))
+        return Array.Empty<string>();
+
+    var blocks = Regex.Split(text, @"\r?\n\s*\r?\n")
+        .Select(b => Regex.Replace(b, @"\s+", " ").Trim())
+        .Where(b => !string.IsNullOrWhiteSpace(b))
+        .ToList();
+
+    var output = new List<string>();
+    foreach (var block in blocks)
+    {
+        var cleaned = Regex.Replace(block, @"^\s*(?:[-*•]|\d+[.)])\s*", "");
+        if (!string.IsNullOrWhiteSpace(cleaned))
+            output.Add(cleaned);
+    }
+
+    if (output.Count == 0 && !string.IsNullOrWhiteSpace(text))
+        output.Add(text.Trim());
+
+    return output;
+}
+
+static async Task<(List<GeneratedTestCase> TestCases, List<NotApplicableItem> NotApplicable)> GenerateTestCasesAsync(
+    List<RequirementItem> requirements,
+    AiOptions aiOptions,
+    GroqClient groq,
+    LocalLlmClient localLlm,
+    CancellationToken ct,
+    Action<int, int>? progress)
+{
+    const int chunkSize = 3;
+    var aggregatedTestCases = new List<GeneratedTestCase>();
+    var aggregatedNotApplicable = new List<NotApplicableItem>();
+    var completed = 0;
+    var total = (int)Math.Ceiling(requirements.Count / (double)chunkSize);
+
+    foreach (var chunk in requirements.Chunk(chunkSize))
+    {
+        var payload = new
+        {
+            requirements = chunk.Select(item => new
+            {
+                id = item.Id,
+                text = item.Text
+            }),
+            rules = new
+            {
+                requiredTestTypes = new[] { "E2E", "Functional", "Security", "UI/UX", "Component" },
+                mustInclude = new[] { "positive", "negative", "edge" },
+                minPerRequirement = 3
+            }
+        };
+
+        var payloadJson = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = false });
+        var prompt = $@"You are a QA analyst. Generate test cases from requirements.
+Return JSON only with schema:
+{{ ""testCases"": [{{ ""id"": ""TC-1"", ""requirementId"": ""R1"", ""type"": ""E2E|Functional|Security|UI/UX|Component"", ""title"": ""..."", ""preconditions"": [""...""], ""steps"": [""...""], ""expected"": ""..."", ""priority"": ""P1|P2|P3"" }}], ""notApplicable"": [{{ ""requirementId"": ""R1"", ""type"": ""Component"", ""reason"": ""..."" }}] }}
+Rules:
+- For each requirement, cover all required types when applicable.
+- If a type is not applicable, add it to notApplicable with a reason.
+- Ensure positive, negative, and edge coverage across the set.
+Input JSON:
+{payloadJson}";
+
+        string? response = null;
+        response = await ChatAsync(aiOptions, groq, localLlm, prompt, systemPrompt: "Return strict JSON only. No markdown. No extra text. If you cannot comply, return {}.", ct);
+        var json = TryExtractJsonObject(response);
+        if (json is null)
+        {
+            var repair = $@"Return ONLY a single JSON object that matches the required schema.
+Do not add any explanations or markdown.
+If no valid JSON can be produced, return {{}}.
+
+Schema:
+{{ ""testCases"": [{{ ""id"": ""TC-1"", ""requirementId"": ""R1"", ""type"": ""E2E|Functional|Security|UI/UX|Component"", ""title"": ""..."", ""preconditions"": [""...""], ""steps"": [""...""], ""expected"": ""..."", ""priority"": ""P1|P2|P3"" }}], ""notApplicable"": [{{ ""requirementId"": ""R1"", ""type"": ""Component"", ""reason"": ""..."" }}] }}
+
+Original response:
+{response}";
+            var repaired = await ChatAsync(aiOptions, groq, localLlm, repair, systemPrompt: "Return strict JSON only.", ct);
+            json = TryExtractJsonObject(repaired);
+        }
+        if (json is null)
+            throw new InvalidOperationException("LLM returned invalid JSON.");
+
+        var (testCases, notApplicable) = ParseLlmTestCases(json);
+        aggregatedTestCases.AddRange(testCases);
+        aggregatedNotApplicable.AddRange(notApplicable);
+
+        completed++;
+        progress?.Invoke(completed, total);
+    }
+
+    for (var i = 0; i < aggregatedTestCases.Count; i++)
+        aggregatedTestCases[i].Id = $"TC-{i + 1}";
+
+    return (aggregatedTestCases, aggregatedNotApplicable);
+}
+
+static (List<GeneratedTestCase> TestCases, List<NotApplicableItem> NotApplicable) ParseLlmTestCases(string json)
+{
+    var testCases = new List<GeneratedTestCase>();
+    var notApplicable = new List<NotApplicableItem>();
+
+    using var doc = JsonDocument.Parse(json);
+    if (doc.RootElement.TryGetProperty("testCases", out var testCasesEl) && testCasesEl.ValueKind == JsonValueKind.Array)
+    {
+        foreach (var item in testCasesEl.EnumerateArray())
+        {
+            var testCase = new GeneratedTestCase
+            {
+                Id = GetString(item, "id"),
+                RequirementId = GetString(item, "requirementId"),
+                Type = GetString(item, "type"),
+                Title = GetString(item, "title"),
+                Preconditions = GetStringArray(item, "preconditions"),
+                Steps = GetStringArray(item, "steps"),
+                Expected = GetString(item, "expected"),
+                Priority = GetString(item, "priority")
+            };
+            testCases.Add(testCase);
+        }
+    }
+
+    if (doc.RootElement.TryGetProperty("notApplicable", out var notApplicableEl) && notApplicableEl.ValueKind == JsonValueKind.Array)
+    {
+        foreach (var item in notApplicableEl.EnumerateArray())
+        {
+            notApplicable.Add(new NotApplicableItem
+            {
+                RequirementId = GetString(item, "requirementId"),
+                Type = GetString(item, "type"),
+                Reason = GetString(item, "reason")
+            });
+        }
+    }
+
+    return (testCases, notApplicable);
+}
+
+static string? GetString(JsonElement element, string propertyName)
+{
+    if (element.TryGetProperty(propertyName, out var value) && value.ValueKind == JsonValueKind.String)
+        return value.GetString();
+    return null;
+}
+
+static List<string> GetStringArray(JsonElement element, string propertyName)
+{
+    var list = new List<string>();
+    if (!element.TryGetProperty(propertyName, out var arr) || arr.ValueKind != JsonValueKind.Array)
+        return list;
+    foreach (var item in arr.EnumerateArray())
+        list.Add(item.GetString() ?? string.Empty);
+    return list;
+}
+
+static string? TryExtractJsonObject(string text)
+{
+    if (string.IsNullOrWhiteSpace(text))
+        return null;
+
+    text = text.Trim();
+    if (text.StartsWith("{", StringComparison.Ordinal) && text.EndsWith("}", StringComparison.Ordinal))
+        return text;
+
+    var first = text.IndexOf('{');
+    var last = text.LastIndexOf('}');
+    if (first < 0 || last <= first)
+        return null;
+
+    var slice = text[first..(last + 1)].Trim();
+    return slice.StartsWith("{", StringComparison.Ordinal) && slice.EndsWith("}", StringComparison.Ordinal)
+        ? slice
+        : null;
+}
+
 static string BuildTextForEmbedding(NormalizedEntity entity)
 {
     var sb = new StringBuilder();
@@ -2049,7 +2299,41 @@ static HashSet<string> TokenizeKeywords(NormalizedEntity entity)
 
 app.Run();
 
-public sealed record SyncFolderRequest(string AllureResultsPath, int? PlanId, int? SuiteId);
+public sealed record RequirementsTestCasesRequest(string Text);
+
+sealed record RequirementItem(string Id, string Text);
+
+sealed class GeneratedTestCase
+{
+    public string? Id { get; set; }
+    public string? RequirementId { get; set; }
+    public string? Type { get; set; }
+    public string? Title { get; set; }
+    public List<string> Preconditions { get; set; } = new();
+    public List<string> Steps { get; set; } = new();
+    public string? Expected { get; set; }
+    public string? Priority { get; set; }
+}
+
+sealed class NotApplicableItem
+{
+    public string? RequirementId { get; set; }
+    public string? Type { get; set; }
+    public string? Reason { get; set; }
+}
+
+sealed class RequirementsJob
+{
+    public string Id { get; private set; } = Guid.NewGuid().ToString("n");
+    public string Status { get; set; } = "queued";
+    public int Total { get; set; }
+    public int Completed { get; set; }
+    public List<GeneratedTestCase>? TestCases { get; set; }
+    public List<NotApplicableItem>? NotApplicable { get; set; }
+    public string? Error { get; set; }
+
+    public static RequirementsJob Create(int total) => new RequirementsJob { Total = total };
+}
 
 sealed record LlmCoveragePayload(
     IReadOnlyList<object> UnmatchedAdo,

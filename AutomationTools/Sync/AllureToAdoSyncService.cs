@@ -15,41 +15,6 @@ public sealed class AllureToAdoSyncService
         _adoOptions = adoOptions;
     }
 
-    public async Task<SyncSummary> SyncFromAllureResultsDirectory(
-        string allureResultsPath,
-        int? planId,
-        int? suiteId,
-        int? configurationId,
-        ApiVersionOverrides? apiVersions,
-        CancellationToken ct)
-    {
-        var effectivePlanId = planId is > 0 ? planId.Value : _adoOptions.PlanId;
-        var effectiveSuiteId = suiteId is > 0 ? suiteId.Value : _adoOptions.SuiteId;
-
-        var files = AllureParsing.FindResultJsonFiles(allureResultsPath);
-        var summary = new SyncSummary(allureResultsPath, effectivePlanId, effectiveSuiteId);
-
-        foreach (var file in files)
-        {
-            ct.ThrowIfCancellationRequested();
-
-            AllureResult allure;
-            try
-            {
-                allure = AllureParsing.ParseResultFile(file);
-            }
-            catch (Exception ex)
-            {
-                summary.Errors.Add(new SyncError(file, $"Failed to parse JSON: {ex.Message}"));
-                continue;
-            }
-
-            await SyncOne(allure, source: file, effectivePlanId, effectiveSuiteId, configurationId, apiVersions, summary, ct);
-        }
-
-        return summary;
-    }
-
     public async Task<SyncSummary> SyncFromAllureResults(
         IReadOnlyList<AllureResult> allureResults,
         int? planId,
@@ -61,7 +26,7 @@ public sealed class AllureToAdoSyncService
         var effectivePlanId = planId is > 0 ? planId.Value : _adoOptions.PlanId;
         var effectiveSuiteId = suiteId is > 0 ? suiteId.Value : _adoOptions.SuiteId;
 
-        var summary = new SyncSummary("(request body)", effectivePlanId, effectiveSuiteId);
+        var summary = new SyncSummary("(allure results)", effectivePlanId, effectiveSuiteId);
 
         foreach (var allure in allureResults)
         {

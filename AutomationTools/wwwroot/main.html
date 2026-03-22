@@ -215,8 +215,8 @@
 
     <div id="sync-tab" class="tab-panel active">
         <h1>ADO Sync</h1>
-        <p>Send Allure or Playwright JSON with planId and suiteId.</p>
-        <p>logic updates an existing Test Case by ID if the name starts with the numeric prefix 1234_.</p>
+        <p>Upload an Allure results ZIP (contains <code>*-result.json</code>). Choose plan and suite, then Send to create or update Test Cases in ADO and add them to the suite.</p>
+        <p>Updates an existing Test Case by ID if the test name starts with a numeric prefix like <code>1234_</code>.</p>
         <div class="row">
             <label>
                 planId
@@ -232,15 +232,10 @@
             </label>
         </div>
 
-        <label>
-            Paste JSON body
-            <textarea id="jsonText" placeholder="Paste Allure or Playwright JSON here..."></textarea>
-        </label>
-
         <div class="row">
             <label>
-                Or choose JSON file
-                <input id="jsonFile" type="file" accept=".json,application/json" />
+                Allure results ZIP
+                <input id="syncAllureZip" type="file" accept=".zip,application/zip" />
             </label>
         </div>
 
@@ -314,6 +309,21 @@
                 <input id="requirementsFigma" type="text" placeholder="https://figma.com/..." />
               </label>
             </div>
+            <label>
+              Requirements text
+              <textarea id="requirementsText" placeholder="Paste requirements text..."></textarea>
+            </label>
+            <div class="row">
+              <label>
+                Requirements text file
+                <input id="requirementsTextFile" type="file" accept=".txt,.md,.json,text/plain,application/json" />
+              </label>
+            </div>
+            <div class="actions">
+              <button id="requirementsLlmBtn">Generate test cases</button>
+              <button id="requirementsExportAdoBtn" class="secondary">Export to ADO</button>
+            </div>
+            <div class="status" id="requirementsStatus"></div>
           </section>
 
           <section class="card">
@@ -445,14 +455,23 @@
           </label>
           <div class="table-wrap" id="embeddingDupAllure"></div>
         </section>
+
+        <section class="card">
+          <h2>Generated test cases</h2>
+          <div class="table-wrap" id="requirementsTestCases"></div>
+        </section>
+
+        <section class="card">
+          <h2>Not applicable</h2>
+          <div class="table-wrap" id="requirementsNotApplicable"></div>
+        </section>
       </div>
     </div>
 
     <script>
       const planIdEl = document.getElementById("planId");
       const suiteIdEl = document.getElementById("suiteId");
-      const jsonTextEl = document.getElementById("jsonText");
-      const jsonFileEl = document.getElementById("jsonFile");
+      const syncAllureZipEl = document.getElementById("syncAllureZip");
       const sendBtn = document.getElementById("sendBtn");
       const clearBtn = document.getElementById("clearBtn");
       const statusEl = document.getElementById("status");
@@ -466,6 +485,13 @@
       const coverageTeamEl = document.getElementById("coverageTeam");
       const requirementsPdfEl = document.getElementById("requirementsPdf");
       const requirementsFigmaEl = document.getElementById("requirementsFigma");
+      const requirementsTextEl = document.getElementById("requirementsText");
+      const requirementsTextFileEl = document.getElementById("requirementsTextFile");
+      const requirementsLlmBtn = document.getElementById("requirementsLlmBtn");
+      const requirementsExportAdoBtn = document.getElementById("requirementsExportAdoBtn");
+      const requirementsStatusEl = document.getElementById("requirementsStatus");
+      const requirementsTestCasesEl = document.getElementById("requirementsTestCases");
+      const requirementsNotApplicableEl = document.getElementById("requirementsNotApplicable");
       const coverageReportZipEl = document.getElementById("coverageReportZip");
       const coverageReportSendBtn = document.getElementById("coverageReportSendBtn");
       const coverageReportStatusEl = document.getElementById("coverageReportStatus");
@@ -529,6 +555,25 @@
 
       function setEmbeddingStatus(message) {
         if (embeddingStatusEl) embeddingStatusEl.textContent = message || "";
+      }
+
+      function setRequirementsStatus(message) {
+        if (requirementsStatusEl) requirementsStatusEl.textContent = message || "";
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll("\"", "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+
+      function formatList(value) {
+        if (!Array.isArray(value)) return escapeHtml(value);
+        if (value.length === 0) return "";
+        return value.map((item) => escapeHtml(item)).join("<br>");
       }
 
 
@@ -762,8 +807,12 @@
         coverageReportStatusEl.textContent = message || "";
       }
 
-      function setCoverageSpinner(show) {
+      function setGlobalSpinner(show) {
         if (globalSpinnerEl) globalSpinnerEl.classList.toggle("hidden", !show);
+      }
+
+      function setCoverageSpinner(show) {
+        setGlobalSpinner(show);
         if (!show) activeRequest = null;
         setUiBusy(show);
       }
@@ -853,41 +902,12 @@
         }
       }
 
-      async function readBody() {
-        const file = jsonFileEl.files && jsonFileEl.files[0];
-        if (file) {
-          return await file.text();
-        }
-        return jsonTextEl.value;
-      }
-
       async function readGenBody() {
         const file = generatorJsonFileEl.files && generatorJsonFileEl.files[0];
         if (file) {
           return await file.text();
         }
         return generatorJsonTextEl.value;
-      }
-
-      function detectSyncEndpoint(parsedJson) {
-        if (Array.isArray(parsedJson)) {
-          // Allure results.json is an array of test cases.
-          return "/sync";
-        }
-
-        if (parsedJson && typeof parsedJson === "object") {
-          if (Array.isArray(parsedJson.suites)) {
-            // Playwright JSON reporter root.
-            return "/sync-playwright-json";
-          }
-
-          // Some Allure exports wrap in {results:[...]}.
-          if (Array.isArray(parsedJson.results)) {
-            return "/sync";
-          }
-        }
-
-        return "/sync";
       }
 
       async function onSend() {
@@ -901,29 +921,21 @@
           return;
         }
 
-        const bodyText = (await readBody()).trim();
-        if (!bodyText) {
-          setStatus("Provide JSON in the textarea or choose a file.");
+        const zipFile = syncAllureZipEl && syncAllureZipEl.files && syncAllureZipEl.files[0];
+        if (!zipFile) {
+          setStatus("Choose an Allure results ZIP file.");
           return;
         }
 
-        let parsed;
-        try {
-          parsed = JSON.parse(bodyText);
-        } catch (err) {
-          setStatus("Invalid JSON: " + err.message);
-          return;
-        }
-
-        const endpoint = detectSyncEndpoint(parsed);
-        const url = `${endpoint}?planId=${encodeURIComponent(planId)}&suiteId=${encodeURIComponent(suiteId)}`;
-        setStatus(`Sending request to ${endpoint}...`);
+        const url = `/sync-allure-zip?planId=${encodeURIComponent(planId)}&suiteId=${encodeURIComponent(suiteId)}`;
+        setStatus("Sending Allure ZIP to /sync-allure-zip...");
 
         try {
+          const formData = new FormData();
+          formData.append("file", zipFile, zipFile.name);
           const response = await fetch(url, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: bodyText
+            body: formData
           });
 
           const text = await response.text();
@@ -946,8 +958,7 @@
       }
 
       function onClear() {
-        jsonTextEl.value = "";
-        jsonFileEl.value = "";
+        if (syncAllureZipEl) syncAllureZipEl.value = "";
         setStatus("");
         setResult("");
       }
@@ -1261,6 +1272,141 @@
         }
       }
 
+      async function readRequirementsText() {
+        const file = requirementsTextFileEl.files && requirementsTextFileEl.files[0];
+        if (file) {
+          return await file.text();
+        }
+        return requirementsTextEl.value;
+      }
+
+      function setRequirementsBusy(busy) {
+        if (requirementsLlmBtn) requirementsLlmBtn.disabled = !!busy;
+      }
+
+      function cancelRequirementsJob() {
+        requirementsJobToken++;
+        setRequirementsBusy(false);
+        setRequirementsStatus("Canceled.");
+        setGlobalSpinner(false);
+      }
+
+      async function onRequirementsGenerate() {
+        setRequirementsStatus("");
+        if (requirementsTestCasesEl) requirementsTestCasesEl.innerHTML = "";
+        if (requirementsNotApplicableEl) requirementsNotApplicableEl.innerHTML = "";
+
+        const rawText = (await readRequirementsText()).trim();
+        if (!rawText) {
+          setRequirementsStatus("Provide requirements text or choose a file.");
+          return;
+        }
+
+        const currentToken = ++requirementsJobToken;
+        setRequirementsBusy(true);
+        setRequirementsStatus("Starting generation...");
+        setGlobalSpinner(true);
+
+        try {
+          const resp = await fetch("/requirements/test-cases/async", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: rawText })
+          });
+
+          const text = await resp.text();
+          if (!resp.ok) {
+            setRequirementsStatus("Error: " + resp.status + " " + resp.statusText);
+            return;
+          }
+
+          let payload = null;
+          try {
+            payload = JSON.parse(text);
+          } catch (err) {
+            setRequirementsStatus("Invalid JSON from LLM.");
+            return;
+          }
+
+          const jobId = payload?.jobId;
+          if (!jobId) {
+            setRequirementsStatus("Failed to start job.");
+            setRequirementsBusy(false);
+            setGlobalSpinner(false);
+            return;
+          }
+
+          await pollRequirementsJob(jobId, currentToken);
+        } catch (err) {
+          setRequirementsStatus("Request failed: " + err.message);
+          setRequirementsBusy(false);
+          setGlobalSpinner(false);
+        } finally {
+        }
+      }
+
+      let requirementsJobToken = 0;
+
+      async function pollRequirementsJob(jobId, token) {
+        if (token !== requirementsJobToken) return;
+        try {
+          const resp = await fetch(`/requirements/test-cases/async/${encodeURIComponent(jobId)}`);
+          const data = await resp.json();
+          if (!resp.ok) {
+            setRequirementsStatus("Error: " + resp.status + " " + resp.statusText);
+            return;
+          }
+
+          if (data.status === "running" || data.status === "queued") {
+            const total = data.total || 0;
+            const completed = data.completed || 0;
+            const progressText = total > 0 ? ` (${completed}/${total})` : "";
+            setRequirementsStatus(`Generating test cases...${progressText}`);
+            setTimeout(() => pollRequirementsJob(jobId, token), 2000);
+            return;
+          }
+
+          if (data.status === "failed") {
+            setRequirementsStatus("Error: " + (data.error || "Generation failed."));
+            setRequirementsBusy(false);
+          setGlobalSpinner(false);
+            return;
+          }
+
+          const testCases = data?.testCases || [];
+          const notApplicable = data?.notApplicable || [];
+
+          setTableData("requirementsTestCases",
+            [
+              { key: "id", label: "Id", sortable: true, get: (m) => escapeHtml(m.id) },
+              { key: "requirementId", label: "Requirement", sortable: true, get: (m) => escapeHtml(m.requirementId) },
+              { key: "type", label: "Type", sortable: true, get: (m) => escapeHtml(m.type) },
+              { key: "title", label: "Title", sortable: true, get: (m) => escapeHtml(m.title) },
+              { key: "preconditions", label: "Preconditions", sortable: false, get: (m) => formatList(m.preconditions) },
+              { key: "steps", label: "Steps", sortable: false, get: (m) => formatList(m.steps) },
+              { key: "expected", label: "Expected", sortable: false, get: (m) => escapeHtml(m.expected) },
+              { key: "priority", label: "Priority", sortable: true, get: (m) => escapeHtml(m.priority) }
+            ],
+            testCases);
+
+          setTableData("requirementsNotApplicable",
+            [
+              { key: "requirementId", label: "Requirement", sortable: true, get: (m) => escapeHtml(m.requirementId) },
+              { key: "type", label: "Type", sortable: true, get: (m) => escapeHtml(m.type) },
+              { key: "reason", label: "Reason", sortable: false, get: (m) => escapeHtml(m.reason) }
+            ],
+            notApplicable);
+
+          setRequirementsStatus(`Generated ${testCases.length} test case(s).`);
+          setRequirementsBusy(false);
+        setGlobalSpinner(false);
+        } catch (err) {
+          setRequirementsStatus("Request failed: " + err.message);
+          setRequirementsBusy(false);
+        setGlobalSpinner(false);
+        }
+      }
+
       planIdEl.addEventListener("change", () => loadSuites(planIdEl.value));
       sendBtn.addEventListener("click", onSend);
       clearBtn.addEventListener("click", onClear);
@@ -1271,9 +1417,23 @@
       if (coverageDupBtn) {
         coverageDupBtn.addEventListener("click", onDuplicateRecalc);
       }
+      if (requirementsLlmBtn) {
+        requirementsLlmBtn.addEventListener("click", onRequirementsGenerate);
+      }
+      if (requirementsExportAdoBtn) {
+        requirementsExportAdoBtn.addEventListener("click", () => {
+          setRequirementsStatus("Export to ADO is not wired yet.");
+        });
+      }
       if (cancelSpinnerBtn) {
         cancelSpinnerBtn.addEventListener("click", () => {
-          if (activeRequest) activeRequest.abort();
+          if (activeRequest) {
+            activeRequest.abort();
+            return;
+          }
+          if (requirementsLlmBtn && requirementsLlmBtn.disabled) {
+            cancelRequirementsJob();
+          }
         });
       }
       coverageExportBtn.addEventListener("click", onCoverageExport);

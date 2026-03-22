@@ -34,8 +34,78 @@
       h1 { margin: 0 0 12px; font-size: 22px; }
       p { margin: 0 0 16px; color: var(--muted); }
       .row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+      .stack { display: flex; flex-direction: column; gap: 14px; }
+      .card {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px;
+        background: color-mix(in srgb, var(--bg) 92%, var(--accent) 8%);
+      }
+      .card h2 {
+        margin: 0 0 10px;
+        font-size: 16px;
+      }
+      .inline-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: color-mix(in srgb, var(--bg) 85%, var(--accent) 15%);
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .spinner {
+        width: 14px;
+        height: 14px;
+        border: 2px solid var(--border);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        display: inline-block;
+        animation: spin 0.8s linear infinite;
+        vertical-align: middle;
+      }
+      .spinner-lg {
+        width: 56px;
+        height: 56px;
+        border-width: 6px;
+      }
+      .overlay {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        z-index: 9999;
+        backdrop-filter: blur(2px);
+        pointer-events: none;
+      }
+      .overlay-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 20px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: color-mix(in srgb, var(--bg) 85%, var(--accent) 15%);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+        pointer-events: auto;
+      }
+      .overlay-card button {
+        min-width: 110px;
+      }
+      .hidden { display: none; }
+      @keyframes spin { to { transform: rotate(360deg); } }
       label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
-      input[type="file"], select, textarea {
+      input[type="file"], input[type="text"], input[type="number"], select, textarea {
         width: 100%;
         border: 1px solid var(--border);
         padding: 8px;
@@ -82,18 +152,71 @@
       }
       .tab-panel { display: none; }
       .tab-panel.active { display: block; }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      th, td {
+        border: 1px solid var(--border);
+        padding: 8px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        background: color-mix(in srgb, var(--bg) 85%, var(--accent) 15%);
+        font-weight: 600;
+      }
+      .table-wrap {
+        overflow: auto;
+        max-height: 360px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+      }
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 8px;
+      }
+      .two-col {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 12px;
+      }
+      .summary-card {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 8px;
+        background: color-mix(in srgb, var(--bg) 92%, var(--accent) 8%);
+      }
+      .sort-btn {
+        appearance: none;
+        border: none;
+        background: none;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+        padding: 0;
+      }
     </style>
   </head>
   <body>
+    <div id="globalSpinner" class="overlay hidden" aria-live="polite" aria-busy="true">
+      <div class="overlay-card">
+        <span class="spinner spinner-lg"></span>
+        <button id="cancelSpinnerBtn" class="secondary" type="button">Cancel</button>
+      </div>
+    </div>
     <div class="tabs">
       <button class="tab-btn active" data-tab="sync-tab">ADO Sync</button>
       <button class="tab-btn" data-tab="generator-tab">Test generator</button>
+      <button class="tab-btn" data-tab="coverage-tab">Coverage</button>
     </div>
 
     <div id="sync-tab" class="tab-panel active">
         <h1>ADO Sync</h1>
-        <p>Send Allure or Playwright JSON with planId and suiteId.</p>
-        <p>logic updates an existing Test Case by ID if the name starts with the numeric prefix 1234_.</p>
+        <p>Upload an Allure results ZIP (contains <code>*-result.json</code>). Choose plan and suite, then Send to create or update Test Cases in ADO and add them to the suite.</p>
+        <p>Updates an existing Test Case by ID if the test name starts with a numeric prefix like <code>1234_</code>.</p>
         <div class="row">
             <label>
                 planId
@@ -109,15 +232,10 @@
             </label>
         </div>
 
-        <label>
-            Paste JSON body
-            <textarea id="jsonText" placeholder="Paste Allure or Playwright JSON here..."></textarea>
-        </label>
-
         <div class="row">
             <label>
-                Or choose JSON file
-                <input id="jsonFile" type="file" accept=".json,application/json" />
+                Allure results ZIP
+                <input id="syncAllureZip" type="file" accept=".zip,application/zip" />
             </label>
         </div>
 
@@ -154,11 +272,206 @@
       <div class="result" id="genResult"></div>
     </div>
 
+    <div id="coverage-tab" class="tab-panel">
+      <h1>Coverage</h1>
+
+      <div class="stack">
+        <div class="two-col">
+          <section class="card">
+            <h2>Test cases</h2>
+            <div class="inline-row">
+              <label>
+                Select ADO Team
+                <select id="coverageTeam">
+                  <option value="">Select team...</option>
+                  <option value="11931">11931 - Bagira</option>
+                  <option value="11935">11935 - Quantum</option>
+                  <option value="11937">11937 - WeTryHarder</option>
+                  <option value="25664">25664 - Nexus</option>
+                  <option value="26809">26809 - ZeroTrace</option>
+                  <option value="27621">27621 - SAP</option>
+                </select>
+              </label>
+              <span id="coverageCount" class="badge">0 tests</span>
+              <button id="coverageExportBtn" class="secondary">Export</button>
+            </div>
+          </section>
+
+          <section class="card">
+            <h2>Requirements</h2>
+            <div class="row">
+              <label>
+                Requirements PDF
+                <input id="requirementsPdf" type="file" accept=".pdf,application/pdf" />
+              </label>
+              <label>
+                Requirements Figma link
+                <input id="requirementsFigma" type="text" placeholder="https://figma.com/..." />
+              </label>
+            </div>
+            <label>
+              Requirements text
+              <textarea id="requirementsText" placeholder="Paste requirements text..."></textarea>
+            </label>
+            <div class="row">
+              <label>
+                Requirements text file
+                <input id="requirementsTextFile" type="file" accept=".txt,.md,.json,text/plain,application/json" />
+              </label>
+            </div>
+            <div class="actions">
+              <button id="requirementsLlmBtn">Generate test cases</button>
+              <button id="requirementsExportAdoBtn" class="secondary">Export to ADO</button>
+            </div>
+            <div class="status" id="requirementsStatus"></div>
+          </section>
+
+          <section class="card">
+            <h2>Automation</h2>
+            <div class="row">
+              <label>
+                Or choose Allure ZIP file
+                <input id="coverageReportZip" type="file" accept=".zip,application/zip" />
+              </label>
+            </div>
+            <div class="actions">
+              <button id="coverageReportSendBtn">Send report</button>
+            </div>
+            <div class="status" id="coverageReportStatus"></div>
+          </section>
+        </div>
+
+        <!-- Coverage section removed -->
+
+        <section class="card">
+          <h2>Coverage</h2>
+          <div class="row">
+            <label>
+              Team ID (Allure)
+              <input id="embeddingTeamId" type="text" placeholder="my-team" />
+            </label>
+            <label>
+              Min score
+              <input id="embeddingMinScore" type="number" step="0.01" min="0" max="1" value="0.75" />
+            </label>
+            <label>
+              Top K
+              <input id="embeddingTopK" type="number" step="1" min="1" value="5" />
+            </label>
+            <label>
+              Force recompute
+              <input id="embeddingForce" type="checkbox" />
+            </label>
+            <label>
+              LLM max ADO (0 = all)
+              <input id="embeddingLlmMaxMatches" type="number" step="1" min="0" value="0" />
+            </label>
+            <label>
+              LLM max Allure (0 = all)
+              <input id="embeddingLlmMaxGaps" type="number" step="1" min="0" value="0" />
+            </label>
+            <label>
+              Duplicate min score
+              <input id="embeddingDupMinScore" type="number" step="0.01" min="0" max="1" value="0.9" />
+            </label>
+          </div>
+          <div class="actions">
+            <button id="coverageCalcBtn">Calculate</button>
+            <button id="coverageDupBtn" class="secondary">Recalculate duplicates</button>
+          </div>
+          <div class="status" id="embeddingStatus"></div>
+          <div class="summary-grid" id="embeddingSummary"></div>
+          <div class="inline-row" id="embeddingReportLinks"></div>
+        </section>
+
+        <section class="card">
+          <h2>Matched</h2>
+          <label>
+            Search
+            <input id="embeddingMatchedFilter" type="text" placeholder="Search matched..." />
+          </label>
+          <div class="table-wrap" id="embeddingMatched"></div>
+        </section>
+
+        <section class="card">
+          <h2>LLM matched</h2>
+          <label>
+            Search
+            <input id="embeddingLlmMatchedFilter" type="text" placeholder="Search LLM matches..." />
+          </label>
+          <div class="table-wrap" id="embeddingLlmMatched"></div>
+        </section>
+
+        <section class="card">
+          <h2>Unmatched ADO</h2>
+          <label>
+            Search
+            <input id="embeddingUnmatchedAdoFilter" type="text" placeholder="Search ADO..." />
+          </label>
+          <div class="table-wrap" id="embeddingUnmatchedAdo"></div>
+        </section>
+
+        <section class="card">
+          <h2>Unmatched Allure</h2>
+          <label>
+            Search
+            <input id="embeddingUnmatchedAllureFilter" type="text" placeholder="Search Allure..." />
+          </label>
+          <div class="table-wrap" id="embeddingUnmatchedAllure"></div>
+        </section>
+
+        <section class="card">
+          <h2>LLM unmatched ADO</h2>
+          <label>
+            Search
+            <input id="embeddingLlmUnmatchedAdoFilter" type="text" placeholder="Search LLM ADO..." />
+          </label>
+          <div class="table-wrap" id="embeddingLlmUnmatchedAdo"></div>
+        </section>
+
+        <section class="card">
+          <h2>LLM unmatched Allure</h2>
+          <label>
+            Search
+            <input id="embeddingLlmUnmatchedAllureFilter" type="text" placeholder="Search LLM Allure..." />
+          </label>
+          <div class="table-wrap" id="embeddingLlmUnmatchedAllure"></div>
+        </section>
+
+        <section class="card">
+          <h2>ADO duplicates</h2>
+          <label>
+            Search
+            <input id="embeddingDupAdoFilter" type="text" placeholder="Search ADO duplicates..." />
+          </label>
+          <div class="table-wrap" id="embeddingDupAdo"></div>
+        </section>
+
+        <section class="card">
+          <h2>Automation duplicates</h2>
+          <label>
+            Search
+            <input id="embeddingDupAllureFilter" type="text" placeholder="Search automation duplicates..." />
+          </label>
+          <div class="table-wrap" id="embeddingDupAllure"></div>
+        </section>
+
+        <section class="card">
+          <h2>Generated test cases</h2>
+          <div class="table-wrap" id="requirementsTestCases"></div>
+        </section>
+
+        <section class="card">
+          <h2>Not applicable</h2>
+          <div class="table-wrap" id="requirementsNotApplicable"></div>
+        </section>
+      </div>
+    </div>
+
     <script>
       const planIdEl = document.getElementById("planId");
       const suiteIdEl = document.getElementById("suiteId");
-      const jsonTextEl = document.getElementById("jsonText");
-      const jsonFileEl = document.getElementById("jsonFile");
+      const syncAllureZipEl = document.getElementById("syncAllureZip");
       const sendBtn = document.getElementById("sendBtn");
       const clearBtn = document.getElementById("clearBtn");
       const statusEl = document.getElementById("status");
@@ -169,10 +482,58 @@
       const genTsBtn = document.getElementById("genTsBtn");
       const genStatusEl = document.getElementById("genStatus");
       const genResultEl = document.getElementById("genResult");
+      const coverageTeamEl = document.getElementById("coverageTeam");
+      const requirementsPdfEl = document.getElementById("requirementsPdf");
+      const requirementsFigmaEl = document.getElementById("requirementsFigma");
+      const requirementsTextEl = document.getElementById("requirementsText");
+      const requirementsTextFileEl = document.getElementById("requirementsTextFile");
+      const requirementsLlmBtn = document.getElementById("requirementsLlmBtn");
+      const requirementsExportAdoBtn = document.getElementById("requirementsExportAdoBtn");
+      const requirementsStatusEl = document.getElementById("requirementsStatus");
+      const requirementsTestCasesEl = document.getElementById("requirementsTestCases");
+      const requirementsNotApplicableEl = document.getElementById("requirementsNotApplicable");
+      const coverageReportZipEl = document.getElementById("coverageReportZip");
+      const coverageReportSendBtn = document.getElementById("coverageReportSendBtn");
+      const coverageReportStatusEl = document.getElementById("coverageReportStatus");
+      const coverageCalcBtn = document.getElementById("coverageCalcBtn");
+      const coverageDupBtn = document.getElementById("coverageDupBtn");
+      const coverageExportBtn = document.getElementById("coverageExportBtn");
+      const embeddingStatusEl = document.getElementById("embeddingStatus");
+      const embeddingTeamIdEl = document.getElementById("embeddingTeamId");
+      const embeddingMinScoreEl = document.getElementById("embeddingMinScore");
+      const embeddingTopKEl = document.getElementById("embeddingTopK");
+      const embeddingForceEl = document.getElementById("embeddingForce");
+      const embeddingLlmMaxMatchesEl = document.getElementById("embeddingLlmMaxMatches");
+      const embeddingLlmMaxGapsEl = document.getElementById("embeddingLlmMaxGaps");
+      const embeddingDupMinScoreEl = document.getElementById("embeddingDupMinScore");
+      const embeddingSummaryEl = document.getElementById("embeddingSummary");
+      const embeddingReportLinksEl = document.getElementById("embeddingReportLinks");
+      const embeddingMatchedEl = document.getElementById("embeddingMatched");
+      const embeddingUnmatchedAdoEl = document.getElementById("embeddingUnmatchedAdo");
+      const embeddingUnmatchedAllureEl = document.getElementById("embeddingUnmatchedAllure");
+      const embeddingMatchedFilterEl = document.getElementById("embeddingMatchedFilter");
+      const embeddingUnmatchedAdoFilterEl = document.getElementById("embeddingUnmatchedAdoFilter");
+      const embeddingUnmatchedAllureFilterEl = document.getElementById("embeddingUnmatchedAllureFilter");
+      const embeddingLlmMatchedEl = document.getElementById("embeddingLlmMatched");
+      const embeddingLlmUnmatchedAdoEl = document.getElementById("embeddingLlmUnmatchedAdo");
+      const embeddingLlmUnmatchedAllureEl = document.getElementById("embeddingLlmUnmatchedAllure");
+      const embeddingLlmMatchedFilterEl = document.getElementById("embeddingLlmMatchedFilter");
+      const embeddingLlmUnmatchedAdoFilterEl = document.getElementById("embeddingLlmUnmatchedAdoFilter");
+      const embeddingLlmUnmatchedAllureFilterEl = document.getElementById("embeddingLlmUnmatchedAllureFilter");
+      const embeddingDupAdoEl = document.getElementById("embeddingDupAdo");
+      const embeddingDupAllureEl = document.getElementById("embeddingDupAllure");
+      const embeddingDupAdoFilterEl = document.getElementById("embeddingDupAdoFilter");
+      const embeddingDupAllureFilterEl = document.getElementById("embeddingDupAllureFilter");
+      const coverageCountEl = document.getElementById("coverageCount");
+      const globalSpinnerEl = document.getElementById("globalSpinner");
+      const cancelSpinnerBtn = document.getElementById("cancelSpinnerBtn");
+      const coverageCache = {};
+      let coverageLoaded = false;
       const tabs = document.querySelectorAll(".tab-btn");
       const panels = document.querySelectorAll(".tab-panel");
       const defaultPlanId = "11937";
       const defaultSuiteId = "29357";
+      let activeRequest = null;
 
       function setStatus(message) {
         statusEl.textContent = message || "";
@@ -188,6 +549,290 @@
 
       function setGenResult(value) {
         genResultEl.textContent = value || "";
+      }
+
+      // Coverage block removed.
+
+      function setEmbeddingStatus(message) {
+        if (embeddingStatusEl) embeddingStatusEl.textContent = message || "";
+      }
+
+      function setRequirementsStatus(message) {
+        if (requirementsStatusEl) requirementsStatusEl.textContent = message || "";
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll("\"", "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+
+      function formatList(value) {
+        if (!Array.isArray(value)) return escapeHtml(value);
+        if (value.length === 0) return "";
+        return value.map((item) => escapeHtml(item)).join("<br>");
+      }
+
+
+      // Pipeline helpers removed.
+
+      function setEmbeddingLinks(planId, teamId) {
+        if (!embeddingReportLinksEl) return;
+        if (!planId || !teamId) {
+          embeddingReportLinksEl.innerHTML = "";
+          return;
+        }
+        const latest = "/coverage/coverage-embedding-report.json";
+        const specific = `/coverage/coverage-embedding-report-${encodeURIComponent(planId)}-${encodeURIComponent(teamId)}.json`;
+        const llmLatest = "/coverage/coverage-embedding-llm-coverage-report.json";
+        const llmSpecific = `/coverage/coverage-embedding-llm-coverage-report-${encodeURIComponent(planId)}-${encodeURIComponent(teamId)}.json`;
+        embeddingReportLinksEl.innerHTML = `
+          <a class="badge" href="${latest}" target="_blank" rel="noreferrer">Latest JSON</a>
+          <a class="badge" href="${specific}" target="_blank" rel="noreferrer">Plan JSON</a>
+          <a class="badge" href="${llmLatest}" target="_blank" rel="noreferrer">LLM latest JSON</a>
+          <a class="badge" href="${llmSpecific}" target="_blank" rel="noreferrer">LLM plan JSON</a>
+        `;
+      }
+
+      function setEmbeddingSummary(report, llmCoverage = null) {
+        if (!report) {
+          embeddingSummaryEl.innerHTML = "";
+          return;
+        }
+        const baseMatched = Number(report.matchedTests ?? 0);
+        const llmMatched = Number(llmCoverage?.matches?.length ?? 0);
+        const totalMatched = baseMatched + llmMatched;
+        const totalAdo = Number(report.totalAdoTests ?? 0);
+        const coveragePercent = totalAdo === 0 ? 0 : Math.round((totalMatched / totalAdo) * 10000) / 100;
+        embeddingSummaryEl.innerHTML = `
+          <div class="summary-card">Coverage: <strong>${coveragePercent}%</strong></div>
+          <div class="summary-card">Matched: <strong>${totalMatched}</strong></div>
+          <div class="summary-card">ADO tests: <strong>${report.totalAdoTests ?? 0}</strong></div>
+          <div class="summary-card">Allure tests: <strong>${report.totalAllureTests ?? 0}</strong></div>
+          <div class="summary-card">Model: <strong>${report.model ?? ""}</strong></div>
+        `;
+      }
+
+      const tableState = {};
+
+      function setTableData(tableId, columns, rows, options = {}) {
+        tableState[tableId] = {
+          columns,
+          rows,
+          rowId: options.rowId || null,
+          sortKey: null,
+          sortDir: "asc",
+          filter: ""
+        };
+        renderTable(tableId);
+      }
+
+      function setTableFilter(tableId, value) {
+        if (!tableState[tableId]) return;
+        tableState[tableId].filter = (value || "").toLowerCase();
+        renderTable(tableId);
+      }
+
+      function renderTable(tableId) {
+        const container = document.getElementById(tableId);
+        const state = tableState[tableId];
+        if (!container || !state) return;
+
+        let rows = state.rows || [];
+        if (state.filter) {
+          rows = rows.filter((row) =>
+            state.columns.some((c) => String(c.get(row) ?? "").toLowerCase().includes(state.filter))
+          );
+        }
+
+        if (state.sortKey) {
+          const col = state.columns.find((c) => c.key === state.sortKey);
+          if (col) {
+            const dir = state.sortDir === "desc" ? -1 : 1;
+            rows = [...rows].sort((a, b) => {
+              const av = col.get(a);
+              const bv = col.get(b);
+              if (typeof av === "number" && typeof bv === "number") {
+                return (av - bv) * dir;
+              }
+              return String(av ?? "").localeCompare(String(bv ?? "")) * dir;
+            });
+          }
+        }
+
+        if (!rows || rows.length === 0) {
+          container.innerHTML = "<div class='status'>No data.</div>";
+          return;
+        }
+
+        const thead = `<tr>${state.columns.map((c) => {
+          const sortable = c.sortable ? "data-sort='true'" : "";
+          const label = c.label;
+          return `<th><button class="sort-btn" data-table="${tableId}" data-key="${c.key}" ${sortable}>${label}</button></th>`;
+        }).join("")}</tr>`;
+
+        const body = rows.map((row) => {
+          const cells = state.columns.map((c) => `<td>${c.get(row) ?? ""}</td>`).join("");
+          const rowId = state.rowId ? ` data-row-id="${state.rowId(row)}"` : "";
+          return `<tr${rowId}>${cells}</tr>`;
+        }).join("");
+
+        container.innerHTML = `<table><thead>${thead}</thead><tbody>${body}</tbody></table>`;
+
+        if (!container.dataset.bound) {
+          container.addEventListener("click", (event) => {
+            const btn = event.target.closest("button[data-sort='true']");
+            if (!btn) return;
+            const tableId = btn.dataset.table;
+            const key = btn.dataset.key;
+            if (!tableState[tableId]) return;
+            const state = tableState[tableId];
+            if (state.sortKey === key) {
+              state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
+            } else {
+              state.sortKey = key;
+              state.sortDir = "asc";
+            }
+            renderTable(tableId);
+          });
+          container.dataset.bound = "true";
+        }
+      }
+
+      function renderEmbeddingTables(report) {
+        if (!report) {
+          embeddingMatchedEl.innerHTML = "";
+          embeddingUnmatchedAdoEl.innerHTML = "";
+          embeddingUnmatchedAllureEl.innerHTML = "";
+          if (embeddingLlmMatchedEl) embeddingLlmMatchedEl.innerHTML = "";
+          if (embeddingLlmUnmatchedAdoEl) embeddingLlmUnmatchedAdoEl.innerHTML = "";
+          if (embeddingLlmUnmatchedAllureEl) embeddingLlmUnmatchedAllureEl.innerHTML = "";
+          return;
+        }
+
+        setTableData("embeddingMatched",
+          [
+            { key: "workItemId", label: "WorkItemId", sortable: true, get: (m) => m.workItemId },
+            { key: "adoSuite", label: "Suite", sortable: true, get: (m) => m.adoSuite },
+            { key: "adoTitle", label: "ADO Title", sortable: true, get: (m) => m.adoTitle },
+            { key: "allureTitle", label: "Allure Title", sortable: true, get: (m) => m.allureTitle },
+            { key: "score", label: "Score", sortable: true, get: (m) => typeof m.score === "number" ? m.score.toFixed(3) : m.score }
+          ],
+          report.matches || []);
+
+        setTableData("embeddingUnmatchedAdo",
+          [
+            { key: "workItemId", label: "WorkItemId", sortable: true, get: (m) => m.workItemId },
+            { key: "adoSuite", label: "Suite", sortable: true, get: (m) => m.adoSuite },
+            { key: "adoTitle", label: "ADO Title", sortable: true, get: (m) => m.adoTitle }
+          ],
+          report.unmatchedAdo || []);
+
+        setTableData("embeddingUnmatchedAllure",
+          [
+            { key: "title", label: "Allure Title", sortable: true, get: (m) => m.title },
+            { key: "fullName", label: "Full name", sortable: true, get: (m) => m.fullName },
+            { key: "uuid", label: "UUID", sortable: true, get: (m) => m.uuid }
+          ],
+          report.unmatchedAllure || []);
+      }
+
+      function renderLlmCoverageTables(llmCoverage) {
+        if (!llmCoverage) {
+          if (embeddingLlmMatchedEl) embeddingLlmMatchedEl.innerHTML = "";
+          if (embeddingLlmUnmatchedAdoEl) embeddingLlmUnmatchedAdoEl.innerHTML = "";
+          if (embeddingLlmUnmatchedAllureEl) embeddingLlmUnmatchedAllureEl.innerHTML = "";
+          return;
+        }
+
+        setTableData("embeddingLlmMatched",
+          [
+            { key: "workItemId", label: "WorkItemId", sortable: true, get: (m) => m.workItemId },
+            { key: "adoSuite", label: "Suite", sortable: true, get: (m) => m.adoSuite },
+            { key: "adoTitle", label: "ADO Title", sortable: true, get: (m) => m.adoTitle },
+            { key: "allureTitle", label: "Allure Title", sortable: true, get: (m) => m.allureTitle },
+            { key: "score", label: "Score", sortable: true, get: (m) => typeof m.score === "number" ? m.score.toFixed(3) : m.score }
+          ],
+          llmCoverage.matches || []);
+
+        setTableData("embeddingLlmUnmatchedAdo",
+          [
+            { key: "workItemId", label: "WorkItemId", sortable: true, get: (m) => m.workItemId },
+            { key: "adoSuite", label: "Suite", sortable: true, get: (m) => m.adoSuite },
+            { key: "adoTitle", label: "ADO Title", sortable: true, get: (m) => m.adoTitle }
+          ],
+          llmCoverage.unmatchedAdo || []);
+
+        setTableData("embeddingLlmUnmatchedAllure",
+          [
+            { key: "title", label: "Allure Title", sortable: true, get: (m) => m.title },
+            { key: "fullName", label: "Full name", sortable: true, get: (m) => m.fullName },
+            { key: "uuid", label: "UUID", sortable: true, get: (m) => m.uuid }
+          ],
+          llmCoverage.unmatchedAllure || []);
+      }
+
+      function renderDuplicateTables(duplicates) {
+        if (!duplicates) {
+          if (embeddingDupAdoEl) embeddingDupAdoEl.innerHTML = "";
+          if (embeddingDupAllureEl) embeddingDupAllureEl.innerHTML = "";
+          return;
+        }
+
+        setTableData("embeddingDupAdo",
+          [
+            { key: "id", label: "Id", sortable: true, get: (m) => m.id },
+            { key: "title", label: "Title", sortable: true, get: (m) => m.title },
+            { key: "dupOf", label: "Duplicate Of", sortable: true, get: (m) => m.duplicateOfId },
+            { key: "kind", label: "Kind", sortable: true, get: (m) => m.kind },
+            { key: "score", label: "Score", sortable: true, get: (m) => typeof m.score === "number" ? m.score.toFixed(4) : m.score }
+          ],
+          duplicates.adoDuplicates || []);
+
+        setTableData("embeddingDupAllure",
+          [
+            { key: "id", label: "Id", sortable: true, get: (m) => m.id },
+            { key: "title", label: "Title", sortable: true, get: (m) => m.title },
+            { key: "dupOf", label: "Duplicate Of", sortable: true, get: (m) => m.duplicateOfId },
+            { key: "kind", label: "Kind", sortable: true, get: (m) => m.kind },
+            { key: "score", label: "Score", sortable: true, get: (m) => typeof m.score === "number" ? m.score.toFixed(4) : m.score }
+          ],
+          duplicates.allureDuplicates || []);
+      }
+
+      function setCoverageReportStatus(message) {
+        coverageReportStatusEl.textContent = message || "";
+      }
+
+      function setGlobalSpinner(show) {
+        if (globalSpinnerEl) globalSpinnerEl.classList.toggle("hidden", !show);
+      }
+
+      function setCoverageSpinner(show) {
+        setGlobalSpinner(show);
+        if (!show) activeRequest = null;
+        setUiBusy(show);
+      }
+
+      function setUiBusy(busy) {
+        const controls = [
+          coverageCalcBtn,
+          coverageDupBtn,
+          coverageExportBtn,
+          coverageReportSendBtn,
+          coverageTeamEl
+        ];
+        controls.forEach((el) => {
+          if (el) el.disabled = !!busy;
+        });
+      }
+
+      function setCoverageCount(count) {
+        const num = Number(count || 0);
+        coverageCountEl.textContent = `${num} tests`;
       }
 
       function setOptions(selectEl, items, selectedId, placeholder) {
@@ -219,7 +864,12 @@
         tabs.forEach((b) => b.classList.toggle("active", b.dataset.tab === tabId));
       }
 
-      tabs.forEach((b) => b.addEventListener("click", () => setActiveTab(b.dataset.tab)));
+      tabs.forEach((b) => b.addEventListener("click", async () => {
+        setActiveTab(b.dataset.tab);
+        if (b.dataset.tab !== "coverage-tab" || coverageLoaded) return;
+
+        coverageLoaded = true;
+      }));
 
       async function loadPlans() {
         try {
@@ -252,41 +902,12 @@
         }
       }
 
-      async function readBody() {
-        const file = jsonFileEl.files && jsonFileEl.files[0];
-        if (file) {
-          return await file.text();
-        }
-        return jsonTextEl.value;
-      }
-
       async function readGenBody() {
         const file = generatorJsonFileEl.files && generatorJsonFileEl.files[0];
         if (file) {
           return await file.text();
         }
         return generatorJsonTextEl.value;
-      }
-
-      function detectSyncEndpoint(parsedJson) {
-        if (Array.isArray(parsedJson)) {
-          // Allure results.json is an array of test cases.
-          return "/sync";
-        }
-
-        if (parsedJson && typeof parsedJson === "object") {
-          if (Array.isArray(parsedJson.suites)) {
-            // Playwright JSON reporter root.
-            return "/sync-playwright-json";
-          }
-
-          // Some Allure exports wrap in {results:[...]}.
-          if (Array.isArray(parsedJson.results)) {
-            return "/sync";
-          }
-        }
-
-        return "/sync";
       }
 
       async function onSend() {
@@ -300,29 +921,21 @@
           return;
         }
 
-        const bodyText = (await readBody()).trim();
-        if (!bodyText) {
-          setStatus("Provide JSON in the textarea or choose a file.");
+        const zipFile = syncAllureZipEl && syncAllureZipEl.files && syncAllureZipEl.files[0];
+        if (!zipFile) {
+          setStatus("Choose an Allure results ZIP file.");
           return;
         }
 
-        let parsed;
-        try {
-          parsed = JSON.parse(bodyText);
-        } catch (err) {
-          setStatus("Invalid JSON: " + err.message);
-          return;
-        }
-
-        const endpoint = detectSyncEndpoint(parsed);
-        const url = `${endpoint}?planId=${encodeURIComponent(planId)}&suiteId=${encodeURIComponent(suiteId)}`;
-        setStatus(`Sending request to ${endpoint}...`);
+        const url = `/sync-allure-zip?planId=${encodeURIComponent(planId)}&suiteId=${encodeURIComponent(suiteId)}`;
+        setStatus("Sending Allure ZIP to /sync-allure-zip...");
 
         try {
+          const formData = new FormData();
+          formData.append("file", zipFile, zipFile.name);
           const response = await fetch(url, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: bodyText
+            body: formData
           });
 
           const text = await response.text();
@@ -345,8 +958,7 @@
       }
 
       function onClear() {
-        jsonTextEl.value = "";
-        jsonFileEl.value = "";
+        if (syncAllureZipEl) syncAllureZipEl.value = "";
         setStatus("");
         setResult("");
       }
@@ -451,13 +1063,516 @@
         }
       }
 
+      async function onCoverageCalc(useLlm = false) {
+        if (activeRequest) {
+          setEmbeddingStatus("Request already running.");
+          return;
+        }
+        setEmbeddingStatus("");
+        setEmbeddingSummary(null);
+        renderEmbeddingTables(null);
+        renderLlmCoverageTables(null);
+        renderDuplicateTables(null);
+        setEmbeddingLinks(null, null);
+        await runEmbeddingReport(useLlm);
+      }
+
+      async function onDuplicateRecalc() {
+        if (activeRequest) {
+          setEmbeddingStatus("Request already running.");
+          return;
+        }
+        const planId = coverageTeamEl.value;
+        if (!planId) {
+          setEmbeddingStatus("Select ADO Team first.");
+          return;
+        }
+
+        const teamId = (embeddingTeamIdEl.value || "").trim() || planId;
+        const minScore = (embeddingMinScoreEl?.value || "").trim();
+        const topK = (embeddingTopKEl?.value || "").trim();
+        const force = embeddingForceEl?.checked ? "true" : "";
+        const dupMinScore = (embeddingDupMinScoreEl?.value || "").trim();
+
+        const params = new URLSearchParams({ planId, teamId });
+        if (minScore) params.append("minScore", minScore);
+        if (topK) params.append("topK", topK);
+        if (force) params.append("force", "true");
+        if (dupMinScore) params.append("dupMinScore", dupMinScore);
+
+        setEmbeddingStatus("Recalculating duplicates...");
+        const controller = new AbortController();
+        activeRequest = controller;
+        setCoverageSpinner(true);
+        try {
+          const response = await fetch(`/coverage/embedding-report?${params.toString()}`, { signal: controller.signal });
+          const text = await response.text();
+          let payload = null;
+          try { payload = JSON.parse(text); } catch {}
+
+          if (response.ok) {
+            setEmbeddingStatus("Success: " + response.status + " " + response.statusText);
+            renderDuplicateTables(payload?.duplicates ?? null);
+            setEmbeddingLinks(planId, teamId);
+          } else {
+            setEmbeddingStatus("Error: " + response.status + " " + response.statusText);
+          }
+        } catch (err) {
+          if (err.name === "AbortError") {
+            setEmbeddingStatus("Canceled.");
+          } else {
+            setEmbeddingStatus("Request failed: " + err.message);
+          }
+        } finally {
+          setCoverageSpinner(false);
+        }
+      }
+
+      async function runEmbeddingReport(useLlm) {
+        const planId = coverageTeamEl.value;
+        if (!planId) {
+          setEmbeddingStatus("Select ADO Team first.");
+          return;
+        }
+
+        const teamId = (embeddingTeamIdEl.value || "").trim() || planId;
+        const minScore = (embeddingMinScoreEl?.value || "").trim();
+        const topK = (embeddingTopKEl?.value || "").trim();
+        const force = embeddingForceEl?.checked ? "true" : "";
+        const llmMaxMatches = (embeddingLlmMaxMatchesEl?.value || "").trim();
+        const llmMaxGaps = (embeddingLlmMaxGapsEl?.value || "").trim();
+        const dupMinScore = (embeddingDupMinScoreEl?.value || "").trim();
+
+        const params = new URLSearchParams({ planId, teamId });
+        if (minScore) params.append("minScore", minScore);
+        if (topK) params.append("topK", topK);
+        if (force) params.append("force", "true");
+        if (useLlm) params.append("llm", "true");
+        if (llmMaxMatches) params.append("llmMaxMatches", llmMaxMatches);
+        if (llmMaxGaps) params.append("llmMaxGaps", llmMaxGaps);
+        if (dupMinScore) params.append("dupMinScore", dupMinScore);
+
+        setEmbeddingStatus("Running embeddings...");
+        const controller = new AbortController();
+        activeRequest = controller;
+        setCoverageSpinner(true);
+        try {
+          const response = await fetch(`/coverage/embedding-report?${params.toString()}`, { signal: controller.signal });
+          const text = await response.text();
+          let payload = null;
+          try { payload = JSON.parse(text); } catch {}
+
+          if (response.ok) {
+            setEmbeddingStatus("Success: " + response.status + " " + response.statusText);
+            const report = payload?.report ?? payload;
+            setEmbeddingSummary(report, payload?.llmCoverage ?? null);
+            renderEmbeddingTables(report);
+            renderLlmCoverageTables(payload?.llmCoverage ?? null);
+            renderDuplicateTables(payload?.duplicates ?? null);
+            setEmbeddingLinks(planId, teamId);
+          } else {
+            setEmbeddingStatus("Error: " + response.status + " " + response.statusText);
+          }
+        } catch (err) {
+          if (err.name === "AbortError") {
+            setEmbeddingStatus("Canceled.");
+          } else {
+            setEmbeddingStatus("Request failed: " + err.message);
+          }
+        } finally {
+          setCoverageSpinner(false);
+        }
+      }
+
+      // Pipeline actions removed.
+
+      async function onCoverageExport() {
+        if (activeRequest) {
+          // Coverage status removed.
+          return;
+        }
+        // Coverage status removed.
+
+        const teamId = coverageTeamEl.value;
+        if (!teamId) {
+          // Coverage status removed.
+          return;
+        }
+
+        // Coverage status removed.
+
+        try {
+          const resp = await fetch(`/coverage/export?planId=${encodeURIComponent(teamId)}`);
+          if (!resp.ok) {
+            const msg = await resp.text();
+            return;
+          }
+
+          const blob = await resp.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `coverage-plan-${teamId}.json`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+
+          // Coverage status removed.
+        } catch (err) {
+          // Coverage status removed.
+        }
+      }
+
+      async function onCoverageReportSend() {
+        if (activeRequest) {
+          setCoverageReportStatus("Request already running.");
+          return;
+        }
+        setCoverageReportStatus("");
+
+        const teamId = coverageTeamEl.value;
+        if (!teamId) {
+          setCoverageReportStatus("Select ADO Team first.");
+          return;
+        }
+
+        const zipFile = coverageReportZipEl.files && coverageReportZipEl.files[0];
+        if (!zipFile) {
+          setCoverageReportStatus("Choose an Allure ZIP file first.");
+          return;
+        }
+
+        setCoverageReportStatus("Uploading ZIP...");
+        try {
+          const controller = new AbortController();
+          activeRequest = controller;
+          setCoverageSpinner(true);
+          const formData = new FormData();
+          formData.append("file", zipFile, zipFile.name);
+          const response = await fetch(`/coverage/report-zip?teamId=${encodeURIComponent(teamId)}`, {
+            method: "POST",
+            body: formData,
+            signal: controller.signal
+          });
+
+          if (response.ok) {
+            setCoverageReportStatus("Success: " + response.status + " " + response.statusText);
+          } else {
+            setCoverageReportStatus("Error: " + response.status + " " + response.statusText);
+          }
+        } catch (err) {
+          if (err.name === "AbortError") {
+            setCoverageReportStatus("Canceled.");
+          } else {
+            setCoverageReportStatus("Request failed: " + err.message);
+          }
+        } finally {
+          setCoverageSpinner(false);
+        }
+      }
+
+      async function readRequirementsText() {
+        const file = requirementsTextFileEl.files && requirementsTextFileEl.files[0];
+        if (file) {
+          return await file.text();
+        }
+        return requirementsTextEl.value;
+      }
+
+      function setRequirementsBusy(busy) {
+        if (requirementsLlmBtn) requirementsLlmBtn.disabled = !!busy;
+      }
+
+      function cancelRequirementsJob() {
+        requirementsJobToken++;
+        setRequirementsBusy(false);
+        setRequirementsStatus("Canceled.");
+        setGlobalSpinner(false);
+      }
+
+      async function onRequirementsGenerate() {
+        setRequirementsStatus("");
+        if (requirementsTestCasesEl) requirementsTestCasesEl.innerHTML = "";
+        if (requirementsNotApplicableEl) requirementsNotApplicableEl.innerHTML = "";
+
+        const rawText = (await readRequirementsText()).trim();
+        if (!rawText) {
+          setRequirementsStatus("Provide requirements text or choose a file.");
+          return;
+        }
+
+        const currentToken = ++requirementsJobToken;
+        setRequirementsBusy(true);
+        setRequirementsStatus("Starting generation...");
+        setGlobalSpinner(true);
+
+        try {
+          const resp = await fetch("/requirements/test-cases/async", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: rawText })
+          });
+
+          const text = await resp.text();
+          if (!resp.ok) {
+            setRequirementsStatus("Error: " + resp.status + " " + resp.statusText);
+            return;
+          }
+
+          let payload = null;
+          try {
+            payload = JSON.parse(text);
+          } catch (err) {
+            setRequirementsStatus("Invalid JSON from LLM.");
+            return;
+          }
+
+          const jobId = payload?.jobId;
+          if (!jobId) {
+            setRequirementsStatus("Failed to start job.");
+            setRequirementsBusy(false);
+            setGlobalSpinner(false);
+            return;
+          }
+
+          await pollRequirementsJob(jobId, currentToken);
+        } catch (err) {
+          setRequirementsStatus("Request failed: " + err.message);
+          setRequirementsBusy(false);
+          setGlobalSpinner(false);
+        } finally {
+        }
+      }
+
+      let requirementsJobToken = 0;
+
+      async function pollRequirementsJob(jobId, token) {
+        if (token !== requirementsJobToken) return;
+        try {
+          const resp = await fetch(`/requirements/test-cases/async/${encodeURIComponent(jobId)}`);
+          const data = await resp.json();
+          if (!resp.ok) {
+            setRequirementsStatus("Error: " + resp.status + " " + resp.statusText);
+            return;
+          }
+
+          if (data.status === "running" || data.status === "queued") {
+            const total = data.total || 0;
+            const completed = data.completed || 0;
+            const progressText = total > 0 ? ` (${completed}/${total})` : "";
+            setRequirementsStatus(`Generating test cases...${progressText}`);
+            setTimeout(() => pollRequirementsJob(jobId, token), 2000);
+            return;
+          }
+
+          if (data.status === "failed") {
+            setRequirementsStatus("Error: " + (data.error || "Generation failed."));
+            setRequirementsBusy(false);
+          setGlobalSpinner(false);
+            return;
+          }
+
+          const testCases = data?.testCases || [];
+          const notApplicable = data?.notApplicable || [];
+
+          setTableData("requirementsTestCases",
+            [
+              { key: "id", label: "Id", sortable: true, get: (m) => escapeHtml(m.id) },
+              { key: "requirementId", label: "Requirement", sortable: true, get: (m) => escapeHtml(m.requirementId) },
+              { key: "type", label: "Type", sortable: true, get: (m) => escapeHtml(m.type) },
+              { key: "title", label: "Title", sortable: true, get: (m) => escapeHtml(m.title) },
+              { key: "preconditions", label: "Preconditions", sortable: false, get: (m) => formatList(m.preconditions) },
+              { key: "steps", label: "Steps", sortable: false, get: (m) => formatList(m.steps) },
+              { key: "expected", label: "Expected", sortable: false, get: (m) => escapeHtml(m.expected) },
+              { key: "priority", label: "Priority", sortable: true, get: (m) => escapeHtml(m.priority) }
+            ],
+            testCases);
+
+          setTableData("requirementsNotApplicable",
+            [
+              { key: "requirementId", label: "Requirement", sortable: true, get: (m) => escapeHtml(m.requirementId) },
+              { key: "type", label: "Type", sortable: true, get: (m) => escapeHtml(m.type) },
+              { key: "reason", label: "Reason", sortable: false, get: (m) => escapeHtml(m.reason) }
+            ],
+            notApplicable);
+
+          setRequirementsStatus(`Generated ${testCases.length} test case(s).`);
+          setRequirementsBusy(false);
+        setGlobalSpinner(false);
+        } catch (err) {
+          setRequirementsStatus("Request failed: " + err.message);
+          setRequirementsBusy(false);
+        setGlobalSpinner(false);
+        }
+      }
+
       planIdEl.addEventListener("change", () => loadSuites(planIdEl.value));
       sendBtn.addEventListener("click", onSend);
       clearBtn.addEventListener("click", onClear);
       genBtn.addEventListener("click", onGenerateZip);
       genTsBtn.addEventListener("click", onGenerateTsZip);
+      coverageReportSendBtn.addEventListener("click", onCoverageReportSend);
+      coverageCalcBtn.addEventListener("click", () => onCoverageCalc(true));
+      if (coverageDupBtn) {
+        coverageDupBtn.addEventListener("click", onDuplicateRecalc);
+      }
+      if (requirementsLlmBtn) {
+        requirementsLlmBtn.addEventListener("click", onRequirementsGenerate);
+      }
+      if (requirementsExportAdoBtn) {
+        requirementsExportAdoBtn.addEventListener("click", () => {
+          setRequirementsStatus("Export to ADO is not wired yet.");
+        });
+      }
+      if (cancelSpinnerBtn) {
+        cancelSpinnerBtn.addEventListener("click", () => {
+          if (activeRequest) {
+            activeRequest.abort();
+            return;
+          }
+          if (requirementsLlmBtn && requirementsLlmBtn.disabled) {
+            cancelRequirementsJob();
+          }
+        });
+      }
+      coverageExportBtn.addEventListener("click", onCoverageExport);
+
+      async function loadCoverageSummary(planId, updateUi = true) {
+        if (!planId) {
+          if (updateUi) setCoverageCount(0);
+          return;
+        }
+
+        if (activeRequest) {
+          if (updateUi) setCoverageStatus("Request already running.");
+          return;
+        }
+
+        if (coverageCache[planId]) {
+          if (updateUi) setCoverageCount(coverageCache[planId].totalTests || 0);
+          return;
+        }
+
+        const controller = new AbortController();
+        activeRequest = controller;
+
+        if (updateUi) {
+          // Coverage status removed.
+          setCoverageCount(0);
+          setCoverageSpinner(true);
+        }
+
+        try {
+          const resp = await fetch(`/coverage/plan-summary?planId=${encodeURIComponent(planId)}`, { signal: controller.signal });
+          if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
+          const data = await resp.json();
+          coverageCache[planId] = data;
+          if (updateUi) {
+            setCoverageCount(data.totalTests || 0);
+            // Coverage status removed.
+          }
+        } catch (err) {
+          if (updateUi) {
+            if (err.name === "AbortError") {
+              // Coverage status removed.
+            } else {
+              // Coverage status removed.
+            }
+            setCoverageCount(0);
+          }
+        } finally {
+          if (updateUi) setCoverageSpinner(false);
+        }
+      }
+
+      async function preloadCoverageSummaries() {
+        const values = Array.from(coverageTeamEl.options).map((o) => o.value).filter(Boolean);
+        if (values.length === 0) return;
+
+        // Coverage status removed.
+        const limit = 3;
+        const queue = values.slice();
+        const workers = Array.from({ length: Math.min(limit, queue.length) }, async () => {
+          while (queue.length) {
+            const planId = queue.shift();
+            await loadCoverageSummary(planId, false);
+          }
+        });
+        await Promise.allSettled(workers);
+
+        // Coverage status removed.
+        setCoverageCount(coverageCache[coverageTeamEl.value]?.totalTests || 0);
+      }
+
+      coverageTeamEl.addEventListener("change", () => loadCoverageSummary(coverageTeamEl.value));
+
+      coverageTeamEl.addEventListener("change", () => {
+        embeddingTeamIdEl.value = coverageTeamEl.value || "";
+        localStorage.setItem("embeddingTeamId", embeddingTeamIdEl.value);
+      });
+
+      if (embeddingMatchedFilterEl) {
+        embeddingMatchedFilterEl.addEventListener("input", (e) => setTableFilter("embeddingMatched", e.target.value));
+      }
+      if (embeddingUnmatchedAdoFilterEl) {
+        embeddingUnmatchedAdoFilterEl.addEventListener("input", (e) => setTableFilter("embeddingUnmatchedAdo", e.target.value));
+      }
+      if (embeddingUnmatchedAllureFilterEl) {
+        embeddingUnmatchedAllureFilterEl.addEventListener("input", (e) => setTableFilter("embeddingUnmatchedAllure", e.target.value));
+      }
+      if (embeddingLlmMatchedFilterEl) {
+        embeddingLlmMatchedFilterEl.addEventListener("input", (e) => setTableFilter("embeddingLlmMatched", e.target.value));
+      }
+      if (embeddingLlmUnmatchedAdoFilterEl) {
+        embeddingLlmUnmatchedAdoFilterEl.addEventListener("input", (e) => setTableFilter("embeddingLlmUnmatchedAdo", e.target.value));
+      }
+      if (embeddingLlmUnmatchedAllureFilterEl) {
+        embeddingLlmUnmatchedAllureFilterEl.addEventListener("input", (e) => setTableFilter("embeddingLlmUnmatchedAllure", e.target.value));
+      }
+      if (embeddingDupAdoFilterEl) {
+        embeddingDupAdoFilterEl.addEventListener("input", (e) => setTableFilter("embeddingDupAdo", e.target.value));
+      }
+      if (embeddingDupAllureFilterEl) {
+        embeddingDupAllureFilterEl.addEventListener("input", (e) => setTableFilter("embeddingDupAllure", e.target.value));
+      }
+      // Pipeline listeners removed.
+
+      function loadEmbeddingSettings() {
+        const savedTeamId = localStorage.getItem("embeddingTeamId");
+        const savedMinScore = localStorage.getItem("embeddingMinScore");
+        const savedTopK = localStorage.getItem("embeddingTopK");
+        const savedForce = localStorage.getItem("embeddingForce");
+        const savedMaxMatches = localStorage.getItem("embeddingLlmMaxMatches");
+        const savedMaxGaps = localStorage.getItem("embeddingLlmMaxGaps");
+        const savedDupMinScore = localStorage.getItem("embeddingDupMinScore");
+
+        if (savedTeamId) embeddingTeamIdEl.value = savedTeamId;
+        if (savedMinScore) embeddingMinScoreEl.value = savedMinScore;
+        if (savedTopK) embeddingTopKEl.value = savedTopK;
+        if (savedForce) embeddingForceEl.checked = savedForce === "true";
+        if (savedMaxMatches) embeddingLlmMaxMatchesEl.value = savedMaxMatches;
+        if (savedMaxGaps) embeddingLlmMaxGapsEl.value = savedMaxGaps;
+        if (savedDupMinScore && embeddingDupMinScoreEl) embeddingDupMinScoreEl.value = savedDupMinScore;
+      }
+
+      function bindEmbeddingSettingsPersistence() {
+        embeddingTeamIdEl.addEventListener("input", () => localStorage.setItem("embeddingTeamId", embeddingTeamIdEl.value));
+        embeddingMinScoreEl.addEventListener("input", () => localStorage.setItem("embeddingMinScore", embeddingMinScoreEl.value));
+        embeddingTopKEl.addEventListener("input", () => localStorage.setItem("embeddingTopK", embeddingTopKEl.value));
+        embeddingForceEl.addEventListener("change", () => localStorage.setItem("embeddingForce", String(embeddingForceEl.checked)));
+        embeddingLlmMaxMatchesEl.addEventListener("input", () => localStorage.setItem("embeddingLlmMaxMatches", embeddingLlmMaxMatchesEl.value));
+        embeddingLlmMaxGapsEl.addEventListener("input", () => localStorage.setItem("embeddingLlmMaxGaps", embeddingLlmMaxGapsEl.value));
+        if (embeddingDupMinScoreEl) {
+          embeddingDupMinScoreEl.addEventListener("input", () => localStorage.setItem("embeddingDupMinScore", embeddingDupMinScoreEl.value));
+        }
+      }
 
       loadPlans();
+      setCoverageCount(0);
+      loadEmbeddingSettings();
+      if (!embeddingTeamIdEl.value) embeddingTeamIdEl.value = "";
+      bindEmbeddingSettingsPersistence();
     </script>
   </body>
 </html>

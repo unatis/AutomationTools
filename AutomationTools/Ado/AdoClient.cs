@@ -31,6 +31,22 @@ public sealed class AdoClient
         return ParseWorkItem(json);
     }
 
+    public async Task<TestCaseDetails?> GetTestCaseDetails(int id, CancellationToken ct, string? witApiVersionOverride = null)
+    {
+        var fields = Uri.EscapeDataString("System.Title,Microsoft.VSTS.TCM.Steps");
+        var url = $"_apis/wit/workitems/{id}?fields={fields}&api-version={GetWitApiVersion(witApiVersionOverride)}";
+        using var req = new HttpRequestMessage(HttpMethod.Get, url);
+        using var resp = await _http.SendAsync(req, ct);
+
+        if (resp.StatusCode == HttpStatusCode.NotFound)
+            return null;
+
+        await EnsureSuccessOrThrow(resp, url, "GetTestCaseDetails", ct);
+
+        var json = await resp.Content.ReadAsStringAsync(ct);
+        return ParseTestCaseDetails(json);
+    }
+
     public async Task<int?> TryFindTestCaseIdByExactTitle(string title, CancellationToken ct, string? witApiVersionOverride = null)
     {
         // WIQL query:
@@ -455,9 +471,34 @@ public sealed class AdoClient
 
         return new AdoWorkItem(id, workItemType);
     }
+
+    private static TestCaseDetails? ParseTestCaseDetails(string json)
+    {
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+
+        if (!root.TryGetProperty("id", out var idEl) || idEl.ValueKind != JsonValueKind.Number)
+            return null;
+
+        var id = idEl.GetInt32();
+        var title = string.Empty;
+        var steps = string.Empty;
+
+        if (root.TryGetProperty("fields", out var fieldsEl) && fieldsEl.ValueKind == JsonValueKind.Object)
+        {
+            if (fieldsEl.TryGetProperty("System.Title", out var titleEl) && titleEl.ValueKind == JsonValueKind.String)
+                title = titleEl.GetString() ?? string.Empty;
+
+            if (fieldsEl.TryGetProperty("Microsoft.VSTS.TCM.Steps", out var stepsEl) && stepsEl.ValueKind == JsonValueKind.String)
+                steps = stepsEl.GetString() ?? string.Empty;
+        }
+
+        return new TestCaseDetails(id, title, steps);
+    }
 }
 
 public sealed record AdoWorkItem(int Id, string WorkItemType);
+public sealed record TestCaseDetails(int Id, string Title, string Steps);
 public sealed record SuiteTestCase(int WorkItemId, string Title);
 public sealed record TestPlanConfiguration(int Id, string Name);
 public sealed record TestPlanItem(int Id, string Name);

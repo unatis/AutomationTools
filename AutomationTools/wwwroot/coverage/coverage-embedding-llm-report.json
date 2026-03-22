@@ -1,0 +1,13 @@
+{
+  "PlanId": 11937,
+  "TeamId": "11937",
+  "Model": "groq",
+  "TokenUsage": {
+    "PromptTokens": 0,
+    "CompletionTokens": 0,
+    "TotalTokens": 0
+  },
+  "MatchReviews": [],
+  "GapExplanations": [],
+  "MissingTests": []
+}

@@ -281,20 +281,22 @@
             <h2>Test cases</h2>
             <div class="inline-row">
               <label>
-                Select ADO Team
+                planId
                 <select id="coverageTeam">
-                  <option value="">Select team...</option>
-                  <option value="11931">11931 - Bagira</option>
-                  <option value="11935">11935 - Quantum</option>
-                  <option value="11937">11937 - WeTryHarder</option>
-                  <option value="25664">25664 - Nexus</option>
-                  <option value="26809">26809 - ZeroTrace</option>
-                  <option value="27621">27621 - SAP</option>
+                  <option value="">Select plan...</option>
                 </select>
               </label>
+              <label>
+                suiteId
+                <select id="coverageSuiteId">
+                  <option value="">All suites</option>
+                </select>
+              </label>
+              <button id="coverageLoadBtn">Load Coverage</button>
               <span id="coverageCount" class="badge">0 tests</span>
               <button id="coverageExportBtn" class="secondary">Export</button>
             </div>
+            <div class="status" id="coverageLoadStatus"></div>
           </section>
 
           <section class="card">
@@ -483,6 +485,7 @@
       const genStatusEl = document.getElementById("genStatus");
       const genResultEl = document.getElementById("genResult");
       const coverageTeamEl = document.getElementById("coverageTeam");
+      const coverageSuiteIdEl = document.getElementById("coverageSuiteId");
       const requirementsPdfEl = document.getElementById("requirementsPdf");
       const requirementsFigmaEl = document.getElementById("requirementsFigma");
       const requirementsTextEl = document.getElementById("requirementsText");
@@ -495,8 +498,10 @@
       const coverageReportZipEl = document.getElementById("coverageReportZip");
       const coverageReportSendBtn = document.getElementById("coverageReportSendBtn");
       const coverageReportStatusEl = document.getElementById("coverageReportStatus");
+      const coverageLoadStatusEl = document.getElementById("coverageLoadStatus");
       const coverageCalcBtn = document.getElementById("coverageCalcBtn");
       const coverageDupBtn = document.getElementById("coverageDupBtn");
+      const coverageLoadBtn = document.getElementById("coverageLoadBtn");
       const coverageExportBtn = document.getElementById("coverageExportBtn");
       const embeddingStatusEl = document.getElementById("embeddingStatus");
       const embeddingTeamIdEl = document.getElementById("embeddingTeamId");
@@ -528,11 +533,11 @@
       const globalSpinnerEl = document.getElementById("globalSpinner");
       const cancelSpinnerBtn = document.getElementById("cancelSpinnerBtn");
       const coverageCache = {};
-      let coverageLoaded = false;
       const tabs = document.querySelectorAll(".tab-btn");
       const panels = document.querySelectorAll(".tab-panel");
-      const defaultPlanId = "11937";
-      const defaultSuiteId = "29357";
+      const defaultPlanId = "";
+      const defaultSuiteId = "";
+      const defaultCoverageSuiteId = "";
       let activeRequest = null;
 
       function setStatus(message) {
@@ -579,21 +584,22 @@
 
       // Pipeline helpers removed.
 
-      function setEmbeddingLinks(planId, teamId) {
+      function setEmbeddingLinks(planId, teamId, suiteId = "") {
         if (!embeddingReportLinksEl) return;
         if (!planId || !teamId) {
           embeddingReportLinksEl.innerHTML = "";
           return;
         }
+        const coverageToken = getCoverageFileToken(planId, suiteId);
         const latest = "/coverage/coverage-embedding-report.json";
-        const specific = `/coverage/coverage-embedding-report-${encodeURIComponent(planId)}-${encodeURIComponent(teamId)}.json`;
+        const specific = `/coverage/coverage-embedding-report-${encodeURIComponent(coverageToken)}-${encodeURIComponent(teamId)}.json`;
         const llmLatest = "/coverage/coverage-embedding-llm-coverage-report.json";
-        const llmSpecific = `/coverage/coverage-embedding-llm-coverage-report-${encodeURIComponent(planId)}-${encodeURIComponent(teamId)}.json`;
+        const llmSpecific = `/coverage/coverage-embedding-llm-coverage-report-${encodeURIComponent(coverageToken)}-${encodeURIComponent(teamId)}.json`;
         embeddingReportLinksEl.innerHTML = `
           <a class="badge" href="${latest}" target="_blank" rel="noreferrer">Latest JSON</a>
-          <a class="badge" href="${specific}" target="_blank" rel="noreferrer">Plan JSON</a>
+          <a class="badge" href="${specific}" target="_blank" rel="noreferrer">Selection JSON</a>
           <a class="badge" href="${llmLatest}" target="_blank" rel="noreferrer">LLM latest JSON</a>
-          <a class="badge" href="${llmSpecific}" target="_blank" rel="noreferrer">LLM plan JSON</a>
+          <a class="badge" href="${llmSpecific}" target="_blank" rel="noreferrer">LLM selection JSON</a>
         `;
       }
 
@@ -821,9 +827,11 @@
         const controls = [
           coverageCalcBtn,
           coverageDupBtn,
+          coverageLoadBtn,
           coverageExportBtn,
           coverageReportSendBtn,
-          coverageTeamEl
+          coverageTeamEl,
+          coverageSuiteIdEl
         ];
         controls.forEach((el) => {
           if (el) el.disabled = !!busy;
@@ -833,6 +841,18 @@
       function setCoverageCount(count) {
         const num = Number(count || 0);
         coverageCountEl.textContent = `${num} tests`;
+      }
+
+      function setCoverageLoadStatus(message) {
+        if (coverageLoadStatusEl) coverageLoadStatusEl.textContent = message || "";
+      }
+
+      function getCoverageCacheKey(planId, suiteId = "") {
+        return `${planId || ""}:${suiteId || ""}`;
+      }
+
+      function getCoverageFileToken(planId, suiteId = "") {
+        return suiteId ? `${planId}-${suiteId}` : planId;
       }
 
       function setOptions(selectEl, items, selectedId, placeholder) {
@@ -848,7 +868,9 @@
         items.forEach((item) => {
           const opt = document.createElement("option");
           opt.value = String(item.id);
-          opt.textContent = item.name ? `${item.id} - ${item.name}` : String(item.id);
+          opt.textContent = item.id === "" || item.id == null
+            ? (item.name || "")
+            : (item.name ? `${item.id} - ${item.name}` : String(item.id));
           selectEl.appendChild(opt);
         });
 
@@ -864,25 +886,44 @@
         tabs.forEach((b) => b.classList.toggle("active", b.dataset.tab === tabId));
       }
 
-      tabs.forEach((b) => b.addEventListener("click", async () => {
+      tabs.forEach((b) => b.addEventListener("click", () => {
         setActiveTab(b.dataset.tab);
-        if (b.dataset.tab !== "coverage-tab" || coverageLoaded) return;
-
-        coverageLoaded = true;
       }));
 
       async function loadPlans() {
+        const selectedCoveragePlanId = coverageTeamEl.value || "";
+        const selectedCoverageSuiteId = coverageSuiteIdEl?.value || "";
         try {
           const resp = await fetch("/debug/testplans");
           if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
           const data = await resp.json();
           setOptions(planIdEl, data.items, defaultPlanId, "No plans");
-          const selectedPlanId = planIdEl.value || defaultPlanId;
+          setOptions(
+            coverageTeamEl,
+            [{ id: "", name: "Select plan..." }, ...(data.items || [])],
+            selectedCoveragePlanId,
+            "No plans"
+          );
+          const selectedPlanId = planIdEl.value || "";
           await loadSuites(selectedPlanId);
+          const selectedCoveragePlan = coverageTeamEl.value || "";
+          await loadCoverageSuites(
+            selectedCoveragePlan,
+            selectedCoveragePlan === selectedCoveragePlanId ? selectedCoverageSuiteId : defaultCoverageSuiteId
+          );
+          setCoverageCount(coverageCache[getCoverageCacheKey(selectedCoveragePlan, coverageSuiteIdEl.value || "")]?.totalTests || 0);
         } catch (err) {
           setStatus("Failed to load plans: " + err.message);
-          setOptions(planIdEl, [{ id: defaultPlanId, name: "" }], defaultPlanId, "No plans");
-          await loadSuites(defaultPlanId);
+          setOptions(planIdEl, [], "", "Failed to load plans");
+          setOptions(
+            coverageTeamEl,
+            [{ id: "", name: "Select plan..." }],
+            selectedCoveragePlanId,
+            "No plans"
+          );
+          await loadSuites("");
+          await loadCoverageSuites("", defaultCoverageSuiteId);
+          setCoverageCount(0);
         }
       }
 
@@ -898,7 +939,28 @@
           setOptions(suiteIdEl, data.items, defaultSuiteId, "No suites");
         } catch (err) {
           setStatus("Failed to load suites: " + err.message);
-          setOptions(suiteIdEl, [{ id: defaultSuiteId, name: "" }], defaultSuiteId, "No suites");
+          setOptions(suiteIdEl, [], "", "Failed to load suites");
+        }
+      }
+
+      async function loadCoverageSuites(planId, selectedSuiteId = defaultCoverageSuiteId) {
+        if (!coverageSuiteIdEl) return;
+        if (!planId) {
+          setOptions(coverageSuiteIdEl, [{ id: "", name: "All suites" }], "", "Select plan first...");
+          return;
+        }
+        try {
+          const resp = await fetch(`/debug/testsuites?planId=${encodeURIComponent(planId)}`);
+          if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
+          const data = await resp.json();
+          setOptions(
+            coverageSuiteIdEl,
+            [{ id: "", name: "All suites" }, ...(data.items || [])],
+            selectedSuiteId,
+            "No suites"
+          );
+        } catch (err) {
+          setOptions(coverageSuiteIdEl, [{ id: "", name: "All suites" }], "", "Failed to load suites");
         }
       }
 
@@ -1083,8 +1145,9 @@
           return;
         }
         const planId = coverageTeamEl.value;
+        const suiteId = coverageSuiteIdEl?.value || "";
         if (!planId) {
-          setEmbeddingStatus("Select ADO Team first.");
+          setEmbeddingStatus("Select plan first.");
           return;
         }
 
@@ -1095,6 +1158,7 @@
         const dupMinScore = (embeddingDupMinScoreEl?.value || "").trim();
 
         const params = new URLSearchParams({ planId, teamId });
+        if (suiteId) params.append("suiteId", suiteId);
         if (minScore) params.append("minScore", minScore);
         if (topK) params.append("topK", topK);
         if (force) params.append("force", "true");
@@ -1113,7 +1177,7 @@
           if (response.ok) {
             setEmbeddingStatus("Success: " + response.status + " " + response.statusText);
             renderDuplicateTables(payload?.duplicates ?? null);
-            setEmbeddingLinks(planId, teamId);
+            setEmbeddingLinks(planId, teamId, suiteId);
           } else {
             setEmbeddingStatus("Error: " + response.status + " " + response.statusText);
           }
@@ -1130,8 +1194,9 @@
 
       async function runEmbeddingReport(useLlm) {
         const planId = coverageTeamEl.value;
+        const suiteId = coverageSuiteIdEl?.value || "";
         if (!planId) {
-          setEmbeddingStatus("Select ADO Team first.");
+          setEmbeddingStatus("Select plan first.");
           return;
         }
 
@@ -1144,6 +1209,7 @@
         const dupMinScore = (embeddingDupMinScoreEl?.value || "").trim();
 
         const params = new URLSearchParams({ planId, teamId });
+        if (suiteId) params.append("suiteId", suiteId);
         if (minScore) params.append("minScore", minScore);
         if (topK) params.append("topK", topK);
         if (force) params.append("force", "true");
@@ -1169,7 +1235,7 @@
             renderEmbeddingTables(report);
             renderLlmCoverageTables(payload?.llmCoverage ?? null);
             renderDuplicateTables(payload?.duplicates ?? null);
-            setEmbeddingLinks(planId, teamId);
+            setEmbeddingLinks(planId, teamId, suiteId);
           } else {
             setEmbeddingStatus("Error: " + response.status + " " + response.statusText);
           }
@@ -1193,8 +1259,9 @@
         }
         // Coverage status removed.
 
-        const teamId = coverageTeamEl.value;
-        if (!teamId) {
+        const planId = coverageTeamEl.value;
+        const suiteId = coverageSuiteIdEl?.value || "";
+        if (!planId) {
           // Coverage status removed.
           return;
         }
@@ -1202,7 +1269,9 @@
         // Coverage status removed.
 
         try {
-          const resp = await fetch(`/coverage/export?planId=${encodeURIComponent(teamId)}`);
+          const params = new URLSearchParams({ planId });
+          if (suiteId) params.append("suiteId", suiteId);
+          const resp = await fetch(`/coverage/export?${params.toString()}`);
           if (!resp.ok) {
             const msg = await resp.text();
             return;
@@ -1212,7 +1281,7 @@
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = url;
-          a.download = `coverage-plan-${teamId}.json`;
+          a.download = `coverage-plan-${getCoverageFileToken(planId, suiteId)}.json`;
           document.body.appendChild(a);
           a.click();
           a.remove();
@@ -1224,6 +1293,33 @@
         }
       }
 
+      function resetCoverageSelectionState() {
+        setCoverageCount(0);
+        setCoverageLoadStatus("");
+        setEmbeddingStatus("");
+        setEmbeddingSummary(null);
+        renderEmbeddingTables(null);
+        renderLlmCoverageTables(null);
+        renderDuplicateTables(null);
+        setEmbeddingLinks(null, null);
+      }
+
+      async function onCoverageLoad() {
+        if (activeRequest) {
+          return;
+        }
+
+        const planId = coverageTeamEl.value;
+        const suiteId = coverageSuiteIdEl?.value || "";
+        if (!planId) {
+          resetCoverageSelectionState();
+          setCoverageLoadStatus("Select plan first.");
+          return;
+        }
+
+        await loadCoverageSummary(planId, suiteId);
+      }
+
       async function onCoverageReportSend() {
         if (activeRequest) {
           setCoverageReportStatus("Request already running.");
@@ -1233,7 +1329,7 @@
 
         const teamId = coverageTeamEl.value;
         if (!teamId) {
-          setCoverageReportStatus("Select ADO Team first.");
+          setCoverageReportStatus("Select plan first.");
           return;
         }
 
@@ -1436,48 +1532,62 @@
           }
         });
       }
+      coverageLoadBtn.addEventListener("click", onCoverageLoad);
       coverageExportBtn.addEventListener("click", onCoverageExport);
 
-      async function loadCoverageSummary(planId, updateUi = true) {
+      async function loadCoverageSummary(planId, suiteId = "", updateUi = true) {
         if (!planId) {
-          if (updateUi) setCoverageCount(0);
+          if (updateUi) {
+            setCoverageCount(0);
+            setCoverageLoadStatus("");
+          }
           return;
         }
 
-        if (activeRequest) {
-          if (updateUi) setCoverageStatus("Request already running.");
+        if (updateUi && activeRequest) {
           return;
         }
 
-        if (coverageCache[planId]) {
-          if (updateUi) setCoverageCount(coverageCache[planId].totalTests || 0);
+        const cacheKey = getCoverageCacheKey(planId, suiteId);
+        if (coverageCache[cacheKey]) {
+          if (updateUi) {
+            setCoverageCount(coverageCache[cacheKey].totalTests || 0);
+            const cached = coverageCache[cacheKey];
+            const suitesCount = Array.isArray(cached.suites) ? cached.suites.length : 0;
+            const sourceLabel = suiteId ? `suiteId ${suiteId}` : `planId ${planId}`;
+            setCoverageLoadStatus(`Loaded ${Number(cached.totalTests || 0)} unique ADO tests from ${suitesCount} suite(s) for ${sourceLabel}.`);
+          }
           return;
         }
 
         const controller = new AbortController();
-        activeRequest = controller;
+        if (updateUi) activeRequest = controller;
 
         if (updateUi) {
-          // Coverage status removed.
+          setCoverageLoadStatus("Loading ADO tests...");
           setCoverageCount(0);
           setCoverageSpinner(true);
         }
 
         try {
-          const resp = await fetch(`/coverage/plan-summary?planId=${encodeURIComponent(planId)}`, { signal: controller.signal });
+          const params = new URLSearchParams({ planId });
+          if (suiteId) params.append("suiteId", suiteId);
+          const resp = await fetch(`/coverage/plan-summary?${params.toString()}`, { signal: controller.signal });
           if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
           const data = await resp.json();
-          coverageCache[planId] = data;
+          coverageCache[cacheKey] = data;
           if (updateUi) {
             setCoverageCount(data.totalTests || 0);
-            // Coverage status removed.
+            const suitesCount = Array.isArray(data.suites) ? data.suites.length : 0;
+            const sourceLabel = suiteId ? `suiteId ${suiteId}` : `planId ${planId}`;
+            setCoverageLoadStatus(`Loaded ${Number(data.totalTests || 0)} unique ADO tests from ${suitesCount} suite(s) for ${sourceLabel}.`);
           }
         } catch (err) {
           if (updateUi) {
             if (err.name === "AbortError") {
-              // Coverage status removed.
+              setCoverageLoadStatus("Loading canceled.");
             } else {
-              // Coverage status removed.
+              setCoverageLoadStatus("Failed to load ADO tests: " + err.message);
             }
             setCoverageCount(0);
           }
@@ -1486,26 +1596,14 @@
         }
       }
 
-      async function preloadCoverageSummaries() {
-        const values = Array.from(coverageTeamEl.options).map((o) => o.value).filter(Boolean);
-        if (values.length === 0) return;
+      coverageTeamEl.addEventListener("change", async () => {
+        await loadCoverageSuites(coverageTeamEl.value, defaultCoverageSuiteId);
+        resetCoverageSelectionState();
+      });
 
-        // Coverage status removed.
-        const limit = 3;
-        const queue = values.slice();
-        const workers = Array.from({ length: Math.min(limit, queue.length) }, async () => {
-          while (queue.length) {
-            const planId = queue.shift();
-            await loadCoverageSummary(planId, false);
-          }
-        });
-        await Promise.allSettled(workers);
-
-        // Coverage status removed.
-        setCoverageCount(coverageCache[coverageTeamEl.value]?.totalTests || 0);
-      }
-
-      coverageTeamEl.addEventListener("change", () => loadCoverageSummary(coverageTeamEl.value));
+      coverageSuiteIdEl.addEventListener("change", () => {
+        resetCoverageSelectionState();
+      });
 
       coverageTeamEl.addEventListener("change", () => {
         embeddingTeamIdEl.value = coverageTeamEl.value || "";

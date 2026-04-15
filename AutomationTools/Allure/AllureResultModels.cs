@@ -21,6 +21,9 @@ public sealed class AllureResult
 
     [JsonPropertyName("steps")]
     public List<AllureStep>? Steps { get; set; }
+
+    [JsonPropertyName("labels")]
+    public List<AllureLabel>? Labels { get; set; }
 }
 
 public sealed class AllureStep
@@ -39,6 +42,15 @@ public sealed class AllureStep
 }
 
 public sealed class AllureParam
+{
+    [JsonPropertyName("name")]
+    public string? Name { get; set; }
+
+    [JsonPropertyName("value")]
+    public string? Value { get; set; }
+}
+
+public sealed class AllureLabel
 {
     [JsonPropertyName("name")]
     public string? Name { get; set; }

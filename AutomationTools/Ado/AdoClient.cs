@@ -369,7 +369,23 @@ public sealed class AdoClient
             var name = item.TryGetProperty("name", out var nameEl) && nameEl.ValueKind == JsonValueKind.String
                 ? (nameEl.GetString() ?? string.Empty)
                 : string.Empty;
-            list.Add(new TestSuiteItem(id, name));
+            int? parentSuiteId = null;
+            if (item.TryGetProperty("parentSuite", out var parentSuiteEl)
+                && parentSuiteEl.ValueKind == JsonValueKind.Object
+                && parentSuiteEl.TryGetProperty("id", out var parentIdEl)
+                && parentIdEl.ValueKind == JsonValueKind.Number)
+            {
+                parentSuiteId = parentIdEl.GetInt32();
+            }
+            else if (item.TryGetProperty("parent", out var parentEl)
+                && parentEl.ValueKind == JsonValueKind.Object
+                && parentEl.TryGetProperty("id", out var parentIdAltEl)
+                && parentIdAltEl.ValueKind == JsonValueKind.Number)
+            {
+                parentSuiteId = parentIdAltEl.GetInt32();
+            }
+
+            list.Add(new TestSuiteItem(id, name, parentSuiteId));
         }
 
         return list;
@@ -502,6 +518,6 @@ public sealed record TestCaseDetails(int Id, string Title, string Steps);
 public sealed record SuiteTestCase(int WorkItemId, string Title);
 public sealed record TestPlanConfiguration(int Id, string Name);
 public sealed record TestPlanItem(int Id, string Name);
-public sealed record TestSuiteItem(int Id, string Name);
+public sealed record TestSuiteItem(int Id, string Name, int? ParentSuiteId);
 
 

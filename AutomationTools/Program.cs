@@ -385,22 +385,37 @@ app.MapPost("/coverage/report-zip", async (
             if (string.IsNullOrWhiteSpace(title))
                 title = r.FullName?.Trim();
 
+            var categoryParts = BuildAllureCategoryParts(r.Labels);
+            var categoryPath = categoryParts.Count == 0 ? "Uncategorized" : string.Join(" / ", categoryParts);
+
             var steps = AllureParsing.FlattenSteps(r.Steps)
                 .Select(s => s.Action)
                 .Where(s => !string.IsNullOrWhiteSpace(s))
                 .ToList();
 
-            return new CoverageAutomationTestCase(
-                Title: title ?? string.Empty,
-                FullName: string.IsNullOrWhiteSpace(r.FullName) ? null : r.FullName.Trim(),
-                Status: string.IsNullOrWhiteSpace(r.Status) ? null : r.Status.Trim(),
-                Uuid: string.IsNullOrWhiteSpace(r.Uuid) ? null : r.Uuid.Trim(),
-                Steps: steps);
+            var testCase = new CoverageAutomationTestCase
+            {
+                Title = title ?? string.Empty,
+                FullName = string.IsNullOrWhiteSpace(r.FullName) ? null : r.FullName.Trim(),
+                Status = string.IsNullOrWhiteSpace(r.Status) ? null : r.Status.Trim(),
+                Uuid = string.IsNullOrWhiteSpace(r.Uuid) ? null : r.Uuid.Trim(),
+                Steps = steps,
+                CategoryPath = categoryPath,
+                CategoryParts = categoryParts
+            };
+
+            testCase.EmbeddingText = BuildAllureEmbeddingText(testCase);
+            return testCase;
         })
         .Where(t => !string.IsNullOrWhiteSpace(t.Title))
         .ToList();
 
-    var report = new CoverageAutomationReportSummary(tests.Count, tests);
+    var report = new CoverageAutomationReportSummary
+    {
+        TotalTests = tests.Count,
+        Tests = tests,
+        CategoryIndex = BuildCoverageCategoryIndex(tests)
+    };
     var key = $"coverage:report:{teamId}";
     cache.Set(key, titles, TimeSpan.FromMinutes(10));
     cache.Set($"coverage:report-model:{teamId}", report, TimeSpan.FromMinutes(10));
@@ -513,6 +528,7 @@ app.MapGet("/requirements/test-cases/async/{jobId}", (string jobId) =>
 
 app.MapGet("/coverage/embedding-report", async (
     int planId,
+    int? suiteId,
     string teamId,
     string? testPlanApiVersion,
     string? witApiVersion,
@@ -537,6 +553,7 @@ app.MapGet("/coverage/embedding-report", async (
     var report = await LoadCoverageReportSummary(teamId, webRootPath, cache, ct);
     var plan = await GetCoverageSummary(
         planId,
+        suiteId,
         testPlanApiVersion,
         witApiVersion,
         force == true,
@@ -553,7 +570,7 @@ app.MapGet("/coverage/embedding-report", async (
     var reportSources = BuildAllureEmbeddingSources(report);
 
     var embeddingsDir = Path.Combine(webRootPath, "coverage");
-    var adoEmbeddingsPath = Path.Combine(embeddingsDir, $"embeddings-ado-plan-{planId}.json");
+    var adoEmbeddingsPath = Path.Combine(embeddingsDir, $"embeddings-ado-plan-{BuildCoverageSelectionToken(planId, suiteId)}.json");
     var reportEmbeddingsPath = Path.Combine(embeddingsDir, $"embeddings-allure-{teamId}.json");
 
     var adoEmbeddings = await GetOrCreateEmbeddingsFile(
@@ -593,7 +610,7 @@ app.MapGet("/coverage/embedding-report", async (
         webRootPath,
         ct);
 
-    await PersistCoverageEmbeddingReport(result, planId, teamId, webRootPath, ct);
+    await PersistCoverageEmbeddingReport(result, planId, suiteId, teamId, webRootPath, ct);
 
     if (llm == true)
     {
@@ -617,7 +634,7 @@ app.MapGet("/coverage/embedding-report", async (
             maxAllure,
             ct);
 
-        await PersistCoverageEmbeddingLlmCoverageReport(llmCoverage, planId, teamId, webRootPath, ct);
+        await PersistCoverageEmbeddingLlmCoverageReport(llmCoverage, planId, suiteId, teamId, webRootPath, ct);
         return Results.Ok(new { report = result, llmCoverage, duplicates });
     }
 
@@ -626,6 +643,7 @@ app.MapGet("/coverage/embedding-report", async (
 
 app.MapGet("/coverage/plan-summary", async (
     int planId,
+    int? suiteId,
     string? testPlanApiVersion,
     string? witApiVersion,
     bool? force,
@@ -635,6 +653,7 @@ app.MapGet("/coverage/plan-summary", async (
 {
     var summary = await GetCoverageSummary(
         planId,
+        suiteId,
         testPlanApiVersion,
         witApiVersion,
         force == true,
@@ -647,6 +666,7 @@ app.MapGet("/coverage/plan-summary", async (
 
 app.MapGet("/coverage/export", async (
     int planId,
+    int? suiteId,
     string? testPlanApiVersion,
     string? witApiVersion,
     bool? force,
@@ -656,6 +676,7 @@ app.MapGet("/coverage/export", async (
 {
     var summary = await GetCoverageSummary(
         planId,
+        suiteId,
         testPlanApiVersion,
         witApiVersion,
         force == true,
@@ -665,13 +686,14 @@ app.MapGet("/coverage/export", async (
         ct);
     var json = JsonSerializer.Serialize(summary, new JsonSerializerOptions { WriteIndented = true });
     var bytes = Encoding.UTF8.GetBytes(json);
-    var fileName = $"coverage-plan-{planId}.json";
+    var fileName = $"coverage-plan-{BuildCoverageSelectionToken(planId, suiteId)}.json";
     return Results.File(bytes, "application/json", fileName);
 });
 
 
 static async Task<CoveragePlanSummary> GetCoverageSummary(
     int planId,
+    int? suiteId,
     string? testPlanApiVersion,
     string? witApiVersion,
     bool force,
@@ -680,13 +702,23 @@ static async Task<CoveragePlanSummary> GetCoverageSummary(
     string webRootPath,
     CancellationToken ct)
 {
-    var cacheKey = $"coverage:plan:{planId}:tp:{testPlanApiVersion ?? ""}:wit:{witApiVersion ?? ""}";
+    var effectiveSuiteId = suiteId is > 0 ? suiteId.Value : (int?)null;
+    var cacheKey = $"coverage:plan:{planId}:suite:{effectiveSuiteId?.ToString() ?? "all"}:tp:{testPlanApiVersion ?? ""}:wit:{witApiVersion ?? ""}";
     if (!force && cache.TryGetValue(cacheKey, out CoveragePlanSummary cached))
         return cached;
 
-    var suites = await client.ListTestSuites(planId, ct, testPlanApiVersion);
+    var allSuites = await client.ListTestSuites(planId, ct, testPlanApiVersion);
+    var suites = allSuites;
+    if (effectiveSuiteId is > 0)
+    {
+        suites = CollectSuiteWithDescendants(allSuites, effectiveSuiteId.Value);
+        if (suites.Count == 0)
+            throw new InvalidOperationException($"Suite {effectiveSuiteId.Value} was not found in plan {planId}.");
+    }
+
     var suiteSummaries = new List<CoverageSuiteSummary>();
     var totalTests = 0;
+    var seenWorkItemIds = new HashSet<int>();
 
     foreach (var suite in suites)
     {
@@ -698,6 +730,8 @@ static async Task<CoveragePlanSummary> GetCoverageSummary(
         foreach (var t in tests)
         {
             ct.ThrowIfCancellationRequested();
+            if (!seenWorkItemIds.Add(t.WorkItemId))
+                continue;
 
             var details = await client.GetTestCaseDetails(t.WorkItemId, ct, witApiVersion);
             var title = details?.Title ?? t.Title;
@@ -711,15 +745,48 @@ static async Task<CoveragePlanSummary> GetCoverageSummary(
         suiteSummaries.Add(new CoverageSuiteSummary(suite.Id, suite.Name, testSummaries));
     }
 
-    var summary = new CoveragePlanSummary(planId, totalTests, suiteSummaries);
+    var summary = new CoveragePlanSummary(planId, effectiveSuiteId, totalTests, suiteSummaries);
     cache.Set(cacheKey, summary, TimeSpan.FromMinutes(10));
-    await PersistCoveragePlanJson(summary, planId, webRootPath, ct);
+    await PersistCoveragePlanJson(summary, planId, effectiveSuiteId, webRootPath, ct);
     return summary;
+}
+
+static IReadOnlyList<TestSuiteItem> CollectSuiteWithDescendants(
+    IReadOnlyList<TestSuiteItem> allSuites,
+    int rootSuiteId)
+{
+    var byId = allSuites.ToDictionary(s => s.Id);
+    var childrenByParent = allSuites
+        .Where(s => s.ParentSuiteId is > 0)
+        .GroupBy(s => s.ParentSuiteId!.Value)
+        .ToDictionary(g => g.Key, g => g.OrderBy(s => s.Name, StringComparer.OrdinalIgnoreCase).ToList());
+
+    var result = new List<TestSuiteItem>();
+    var visited = new HashSet<int>();
+
+    void Visit(int suiteId)
+    {
+        if (!visited.Add(suiteId))
+            return;
+        if (!byId.TryGetValue(suiteId, out var suite))
+            return;
+
+        result.Add(suite);
+        if (!childrenByParent.TryGetValue(suiteId, out var children))
+            return;
+
+        foreach (var child in children)
+            Visit(child.Id);
+    }
+
+    Visit(rootSuiteId);
+    return result;
 }
 
 static async Task PersistCoveragePlanJson(
     CoveragePlanSummary summary,
     int planId,
+    int? suiteId,
     string webRootPath,
     CancellationToken ct)
 {
@@ -727,7 +794,7 @@ static async Task PersistCoveragePlanJson(
     Directory.CreateDirectory(coverageDir);
 
     var json = JsonSerializer.Serialize(summary, new JsonSerializerOptions { WriteIndented = true });
-    var planFile = Path.Combine(coverageDir, $"coverage-plan-{planId}.json");
+    var planFile = Path.Combine(coverageDir, $"coverage-plan-{BuildCoverageSelectionToken(planId, suiteId)}.json");
     var latestFile = Path.Combine(coverageDir, "coverage-plan.json");
 
     await File.WriteAllTextAsync(planFile, json, ct);
@@ -808,8 +875,103 @@ static async Task<CoverageAutomationReportSummary> LoadCoverageReportSummary(
     if (report is null)
         throw new InvalidOperationException("Failed to deserialize coverage report.");
 
+    report = NormalizeCoverageReportSummary(report);
     cache.Set(cacheKey, report, TimeSpan.FromMinutes(10));
     return report;
+}
+
+static IReadOnlyList<string> BuildAllureCategoryParts(IReadOnlyList<AllureLabel>? labels)
+{
+    if (labels is null || labels.Count == 0)
+        return Array.Empty<string>();
+
+    string? GetLabel(string name) => labels
+        .FirstOrDefault(l => string.Equals(l.Name, name, StringComparison.OrdinalIgnoreCase))
+        ?.Value
+        ?.Trim();
+
+    return new[]
+    {
+        GetLabel("parentSuite"),
+        GetLabel("suite"),
+        GetLabel("subSuite")
+    }
+    .Where(p => !string.IsNullOrWhiteSpace(p))
+    .Select(p => p!)
+    .ToList();
+}
+
+static IReadOnlyList<CoverageAutomationCategoryIndex> BuildCoverageCategoryIndex(IReadOnlyList<CoverageAutomationTestCase> tests)
+{
+    return tests
+        .GroupBy(t => string.IsNullOrWhiteSpace(t.CategoryPath) ? "Uncategorized" : t.CategoryPath)
+        .OrderBy(g => g.Key, StringComparer.OrdinalIgnoreCase)
+        .Select(g => new CoverageAutomationCategoryIndex
+        {
+            Name = g.Key,
+            Count = g.Count()
+        })
+        .ToList();
+}
+
+static CoverageAutomationReportSummary NormalizeCoverageReportSummary(CoverageAutomationReportSummary report)
+{
+    var normalizedTests = report.Tests
+        .Select(t =>
+        {
+            var categoryPath = string.IsNullOrWhiteSpace(t.CategoryPath) ? "Uncategorized" : t.CategoryPath.Trim();
+            var categoryParts = t.CategoryParts is { Count: > 0 }
+                ? t.CategoryParts.Where(p => !string.IsNullOrWhiteSpace(p)).Select(p => p.Trim()).ToList()
+                : categoryPath.Split(" / ", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+
+            var normalized = new CoverageAutomationTestCase
+            {
+                Title = t.Title,
+                FullName = t.FullName,
+                Status = t.Status,
+                Uuid = t.Uuid,
+                Steps = t.Steps ?? Array.Empty<string>(),
+                CategoryPath = categoryPath,
+                CategoryParts = categoryParts
+            };
+
+            normalized.EmbeddingText = string.IsNullOrWhiteSpace(t.EmbeddingText)
+                ? BuildAllureEmbeddingText(normalized)
+                : t.EmbeddingText;
+
+            return normalized;
+        })
+        .ToList();
+
+    return new CoverageAutomationReportSummary
+    {
+        Version = report.Version > 0 ? report.Version : 2,
+        Source = string.IsNullOrWhiteSpace(report.Source) ? "allure-zip" : report.Source,
+        TotalTests = normalizedTests.Count,
+        Tests = normalizedTests,
+        CategoryIndex = report.CategoryIndex is { Count: > 0 }
+            ? report.CategoryIndex
+            : BuildCoverageCategoryIndex(normalizedTests)
+    };
+}
+
+static string BuildAllureEmbeddingText(CoverageAutomationTestCase test)
+{
+    var sb = new StringBuilder();
+    sb.AppendLine($"category: {test.CategoryPath}");
+    if (test.CategoryParts is { Count: > 0 })
+        sb.AppendLine($"categoryParts: {string.Join(" > ", test.CategoryParts)}");
+    sb.AppendLine($"title: {test.Title}");
+    if (!string.IsNullOrWhiteSpace(test.FullName))
+        sb.AppendLine($"fullName: {test.FullName}");
+    if (test.Steps is { Count: > 0 })
+    {
+        sb.AppendLine("steps:");
+        for (var i = 0; i < test.Steps.Count; i++)
+            sb.AppendLine($"{i + 1}. {test.Steps[i]}");
+    }
+
+    return NormalizeText(sb.ToString());
 }
 
 static IReadOnlyList<CoverageEmbeddingSource> BuildAdoEmbeddingSources(CoveragePlanSummary plan)
@@ -835,8 +997,9 @@ static IReadOnlyList<CoverageEmbeddingSource> BuildAllureEmbeddingSources(Covera
     for (var i = 0; i < report.Tests.Count; i++)
     {
         var t = report.Tests[i];
-        var steps = t.Steps is { Count: > 0 } ? string.Join("\n", t.Steps) : string.Empty;
-        var text = NormalizeText($"{t.Title}\n{t.FullName ?? string.Empty}\n{steps}");
+        var text = string.IsNullOrWhiteSpace(t.EmbeddingText)
+            ? BuildAllureEmbeddingText(t)
+            : t.EmbeddingText;
         sources.Add(new CoverageEmbeddingSource(ids[i], text));
     }
 
@@ -1064,6 +1227,7 @@ static CoverageEmbeddingReport BuildEmbeddingReport(
         unmatchedAdo.AddRange(adoMeta.Select(a => new CoverageEmbeddingUnmatchedAdo(a.WorkItemId, a.Title, a.Suite)));
         return new CoverageEmbeddingReport(
             plan.PlanId,
+            plan.SuiteId,
             teamId,
             adoMeta.Count,
             0,
@@ -1126,6 +1290,7 @@ static CoverageEmbeddingReport BuildEmbeddingReport(
 
     return new CoverageEmbeddingReport(
         plan.PlanId,
+        plan.SuiteId,
         teamId,
         totalAdo,
         totalAllure,
@@ -1208,6 +1373,7 @@ static string StripHtml(string html)
 static async Task PersistCoverageEmbeddingReport(
     CoverageEmbeddingReport report,
     int planId,
+    int? suiteId,
     string teamId,
     string webRootPath,
     CancellationToken ct)
@@ -1216,7 +1382,7 @@ static async Task PersistCoverageEmbeddingReport(
     Directory.CreateDirectory(coverageDir);
 
     var json = JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true });
-    var reportFile = Path.Combine(coverageDir, $"coverage-embedding-report-{planId}-{teamId}.json");
+    var reportFile = Path.Combine(coverageDir, $"coverage-embedding-report-{BuildCoverageSelectionToken(planId, suiteId)}-{teamId}.json");
     var latestFile = Path.Combine(coverageDir, "coverage-embedding-report.json");
 
     await File.WriteAllTextAsync(reportFile, json, ct);
@@ -1226,6 +1392,7 @@ static async Task PersistCoverageEmbeddingReport(
 static async Task PersistCoverageEmbeddingLlmReport(
     CoverageEmbeddingLlmReport report,
     int planId,
+    int? suiteId,
     string teamId,
     string webRootPath,
     CancellationToken ct)
@@ -1234,7 +1401,7 @@ static async Task PersistCoverageEmbeddingLlmReport(
     Directory.CreateDirectory(coverageDir);
 
     var json = JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true });
-    var reportFile = Path.Combine(coverageDir, $"coverage-embedding-llm-report-{planId}-{teamId}.json");
+    var reportFile = Path.Combine(coverageDir, $"coverage-embedding-llm-report-{BuildCoverageSelectionToken(planId, suiteId)}-{teamId}.json");
     var latestFile = Path.Combine(coverageDir, "coverage-embedding-llm-report.json");
 
     await File.WriteAllTextAsync(reportFile, json, ct);
@@ -1244,6 +1411,7 @@ static async Task PersistCoverageEmbeddingLlmReport(
 static async Task PersistCoverageEmbeddingLlmCoverageReport(
     CoverageEmbeddingLlmCoverageReport report,
     int planId,
+    int? suiteId,
     string teamId,
     string webRootPath,
     CancellationToken ct)
@@ -1252,7 +1420,7 @@ static async Task PersistCoverageEmbeddingLlmCoverageReport(
     Directory.CreateDirectory(coverageDir);
 
     var json = JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true });
-    var reportFile = Path.Combine(coverageDir, $"coverage-embedding-llm-coverage-report-{planId}-{teamId}.json");
+    var reportFile = Path.Combine(coverageDir, $"coverage-embedding-llm-coverage-report-{BuildCoverageSelectionToken(planId, suiteId)}-{teamId}.json");
     var latestFile = Path.Combine(coverageDir, "coverage-embedding-llm-coverage-report.json");
 
     await File.WriteAllTextAsync(reportFile, json, ct);
@@ -1282,6 +1450,7 @@ static async Task<CoverageEmbeddingLlmCoverageReport> BuildLlmCoverageFromUnmatc
     {
         return new CoverageEmbeddingLlmCoverageReport(
             embeddingReport.PlanId,
+            embeddingReport.SuiteId,
             embeddingReport.TeamId,
             "groq",
             Array.Empty<CoverageEmbeddingMatch>(),
@@ -1344,6 +1513,7 @@ static async Task<CoverageEmbeddingLlmCoverageReport> BuildLlmCoverageFromUnmatc
 
     return new CoverageEmbeddingLlmCoverageReport(
         embeddingReport.PlanId,
+        embeddingReport.SuiteId,
         embeddingReport.TeamId,
         "groq",
         matches,
@@ -1372,7 +1542,7 @@ static async Task<CoverageDuplicateReport> BuildDuplicateReport(
         embeddingModel,
         effectiveMinScore,
         "ado",
-        plan.PlanId.ToString(),
+        BuildCoverageSelectionToken(plan.PlanId, plan.SuiteId),
         force,
         embeddings,
         webRootPath,
@@ -1668,6 +1838,7 @@ static async Task<CoverageEmbeddingLlmReport> BuildLlmEmbeddingReport(
 
     return new CoverageEmbeddingLlmReport(
         embeddingReport.PlanId,
+        embeddingReport.SuiteId,
         embeddingReport.TeamId,
         "groq",
         tokenUsage,
@@ -1675,6 +1846,9 @@ static async Task<CoverageEmbeddingLlmReport> BuildLlmEmbeddingReport(
         gapResult.Explanations,
         gapResult.MissingTests);
 }
+
+static string BuildCoverageSelectionToken(int planId, int? suiteId)
+    => suiteId is > 0 ? $"{planId}-{suiteId.Value}" : planId.ToString();
 
 static async Task<(IReadOnlyList<CoverageLlmMatchReview> Reviews, CoverageLlmTokenUsage Usage)> ReviewMatchesWithLlm(
     CoveragePlanSummary plan,
@@ -1934,12 +2108,16 @@ static IReadOnlyList<NormalizedEntity> NormalizeAllureReport(CoverageAutomationR
             id,
             "automation_test",
             test.Title,
-            Feature: null,
+            Feature: test.CategoryPath,
             Screen: null,
             actions,
             assertions,
             Behaviors: Array.Empty<string>(),
-            new Dictionary<string, string> { { "uuid", test.Uuid ?? string.Empty } }));
+            new Dictionary<string, string>
+            {
+                { "uuid", test.Uuid ?? string.Empty },
+                { "categoryPath", test.CategoryPath ?? string.Empty }
+            }));
     }
 
     return output;

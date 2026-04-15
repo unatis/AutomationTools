@@ -34,6 +34,7 @@ public sealed record CoverageEmbeddingUnmatchedAllure(
 
 public sealed record CoverageEmbeddingReport(
     int PlanId,
+    int? SuiteId,
     string TeamId,
     int TotalAdoTests,
     int TotalAllureTests,
@@ -70,6 +71,7 @@ public sealed record CoverageLlmMissingTest(
 
 public sealed record CoverageEmbeddingLlmReport(
     int PlanId,
+    int? SuiteId,
     string TeamId,
     string Model,
     CoverageLlmTokenUsage TokenUsage,
@@ -79,6 +81,7 @@ public sealed record CoverageEmbeddingLlmReport(
 
 public sealed record CoverageEmbeddingLlmCoverageReport(
     int PlanId,
+    int? SuiteId,
     string TeamId,
     string Model,
     IReadOnlyList<CoverageEmbeddingMatch> Matches,

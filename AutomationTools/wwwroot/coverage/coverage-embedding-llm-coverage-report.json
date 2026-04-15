@@ -4,18 +4,6 @@
   "TeamId": "11931",
   "Model": "groq",
   "Matches": [],
-  "UnmatchedAdo": [
-    {
-      "WorkItemId": 32972,
-      "AdoTitle": "VerifyTransformationSource2",
-      "AdoSuite": "JsonTests"
-    }
-  ],
-  "UnmatchedAllure": [
-    {
-      "Title": "E2ETest_CSV",
-      "FullName": "Tests:automation_empty_project_template.Suites.E2E.E2ETest_CSV()",
-      "Uuid": "8134f61c-5c53-4e3d-966a-bf3764d5f6e8"
-    }
-  ]
+  "UnmatchedAdo": [],
+  "UnmatchedAllure": []
 }

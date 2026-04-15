@@ -20,7 +20,11 @@ public sealed record CoverageEmbeddingMatch(
     string? AllureTitle,
     string? AllureFullName,
     string? AllureUuid,
-    double Score);
+    double Score,
+    double TitleScore,
+    double CategoryScore,
+    double StepsScore,
+    string MatchedBy);
 
 public sealed record CoverageEmbeddingUnmatchedAdo(
     int WorkItemId,
@@ -31,6 +35,19 @@ public sealed record CoverageEmbeddingUnmatchedAllure(
     string Title,
     string? FullName,
     string? Uuid);
+
+public sealed record CoverageEmbeddingCandidate(
+    int WorkItemId,
+    string AdoTitle,
+    string AdoSuite,
+    string? AllureTitle,
+    string? AllureFullName,
+    string? AllureUuid,
+    double Score,
+    double TitleScore,
+    double CategoryScore,
+    double StepsScore,
+    int Rank);
 
 public sealed record CoverageEmbeddingReport(
     int PlanId,
@@ -45,7 +62,8 @@ public sealed record CoverageEmbeddingReport(
     int TopK,
     IReadOnlyList<CoverageEmbeddingMatch> Matches,
     IReadOnlyList<CoverageEmbeddingUnmatchedAdo> UnmatchedAdo,
-    IReadOnlyList<CoverageEmbeddingUnmatchedAllure> UnmatchedAllure);
+    IReadOnlyList<CoverageEmbeddingUnmatchedAllure> UnmatchedAllure,
+    IReadOnlyList<CoverageEmbeddingCandidate> Candidates);
 
 public sealed record CoverageLlmMatchReview(
     int WorkItemId,

@@ -7,6 +7,7 @@ using AutomationTools.Allure;
 using AutomationTools.TestGenerator;
 using AutomationTools.Ai;
 using AutomationTools.Coverage;
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.IO.Compression;
@@ -566,25 +567,56 @@ app.MapGet("/coverage/embedding-report", async (
     var effectiveTopK = topK is > 0 ? topK.Value : 5;
     var effectiveMinScore = minScore is > 0 ? minScore.Value : 0.75;
 
-    var adoSources = BuildAdoEmbeddingSources(plan);
-    var reportSources = BuildAllureEmbeddingSources(report);
+    var adoItems = BuildCanonicalCoverageItemsFromAdo(plan);
+    var allureItems = BuildCanonicalCoverageItemsFromAllure(report);
 
     var embeddingsDir = Path.Combine(webRootPath, "coverage");
-    var adoEmbeddingsPath = Path.Combine(embeddingsDir, $"embeddings-ado-plan-{BuildCoverageSelectionToken(planId, suiteId)}.json");
-    var reportEmbeddingsPath = Path.Combine(embeddingsDir, $"embeddings-allure-{teamId}.json");
+    var selectionToken = BuildCoverageSelectionToken(planId, suiteId);
 
-    var adoEmbeddings = await GetOrCreateEmbeddingsFile(
-        adoEmbeddingsPath,
+    var adoTitleEmbeddings = await GetOrCreateEmbeddingsFile(
+        Path.Combine(embeddingsDir, $"embeddings-ado-title-plan-{selectionToken}.json"),
         embeddingModel,
-        adoSources,
+        BuildEmbeddingSources(adoItems, item => item.Parts.TitleText),
         embeddings,
         force == true,
         ct);
 
-    var reportEmbeddings = await GetOrCreateEmbeddingsFile(
-        reportEmbeddingsPath,
+    var adoCategoryEmbeddings = await GetOrCreateEmbeddingsFile(
+        Path.Combine(embeddingsDir, $"embeddings-ado-category-plan-{selectionToken}.json"),
         embeddingModel,
-        reportSources,
+        BuildEmbeddingSources(adoItems, item => item.Parts.CategoryText),
+        embeddings,
+        force == true,
+        ct);
+
+    var adoStepsEmbeddings = await GetOrCreateChunkEmbeddingsFile(
+        Path.Combine(embeddingsDir, $"embeddings-ado-steps-plan-{selectionToken}.json"),
+        embeddingModel,
+        BuildEmbeddingSources(adoItems, item => item.Parts.StepsText),
+        embeddings,
+        force == true,
+        ct);
+
+    var allureTitleEmbeddings = await GetOrCreateEmbeddingsFile(
+        Path.Combine(embeddingsDir, $"embeddings-allure-title-{teamId}.json"),
+        embeddingModel,
+        BuildEmbeddingSources(allureItems, item => item.Parts.TitleText),
+        embeddings,
+        force == true,
+        ct);
+
+    var allureCategoryEmbeddings = await GetOrCreateEmbeddingsFile(
+        Path.Combine(embeddingsDir, $"embeddings-allure-category-{teamId}.json"),
+        embeddingModel,
+        BuildEmbeddingSources(allureItems, item => item.Parts.CategoryText),
+        embeddings,
+        force == true,
+        ct);
+
+    var allureStepsEmbeddings = await GetOrCreateChunkEmbeddingsFile(
+        Path.Combine(embeddingsDir, $"embeddings-allure-steps-{teamId}.json"),
+        embeddingModel,
+        BuildEmbeddingSources(allureItems, item => item.Parts.StepsText),
         embeddings,
         force == true,
         ct);
@@ -592,8 +624,14 @@ app.MapGet("/coverage/embedding-report", async (
     var result = BuildEmbeddingReport(
         plan,
         report,
-        adoEmbeddings,
-        reportEmbeddings,
+        adoItems,
+        allureItems,
+        adoTitleEmbeddings,
+        adoCategoryEmbeddings,
+        adoStepsEmbeddings,
+        allureTitleEmbeddings,
+        allureCategoryEmbeddings,
+        allureStepsEmbeddings,
         teamId,
         embeddingModel,
         effectiveMinScore,
@@ -957,53 +995,12 @@ static CoverageAutomationReportSummary NormalizeCoverageReportSummary(CoverageAu
 
 static string BuildAllureEmbeddingText(CoverageAutomationTestCase test)
 {
-    var sb = new StringBuilder();
-    sb.AppendLine($"category: {test.CategoryPath}");
-    if (test.CategoryParts is { Count: > 0 })
-        sb.AppendLine($"categoryParts: {string.Join(" > ", test.CategoryParts)}");
-    sb.AppendLine($"title: {test.Title}");
-    if (!string.IsNullOrWhiteSpace(test.FullName))
-        sb.AppendLine($"fullName: {test.FullName}");
-    if (test.Steps is { Count: > 0 })
-    {
-        sb.AppendLine("steps:");
-        for (var i = 0; i < test.Steps.Count; i++)
-            sb.AppendLine($"{i + 1}. {test.Steps[i]}");
-    }
-
-    return NormalizeText(sb.ToString());
-}
-
-static IReadOnlyList<CoverageEmbeddingSource> BuildAdoEmbeddingSources(CoveragePlanSummary plan)
-{
-    var sources = new List<CoverageEmbeddingSource>();
-    foreach (var suite in plan.Suites)
-    {
-        foreach (var test in suite.Tests)
-        {
-            var text = NormalizeText($"{suite.Name}\n{test.Title}\n{test.Steps}");
-            sources.Add(new CoverageEmbeddingSource(test.WorkItemId.ToString(), text));
-        }
-    }
-
-    return sources;
-}
-
-static IReadOnlyList<CoverageEmbeddingSource> BuildAllureEmbeddingSources(CoverageAutomationReportSummary report)
-{
-    var sources = new List<CoverageEmbeddingSource>();
-    var ids = BuildAllureIds(report.Tests);
-
-    for (var i = 0; i < report.Tests.Count; i++)
-    {
-        var t = report.Tests[i];
-        var text = string.IsNullOrWhiteSpace(t.EmbeddingText)
-            ? BuildAllureEmbeddingText(t)
-            : t.EmbeddingText;
-        sources.Add(new CoverageEmbeddingSource(ids[i], text));
-    }
-
-    return sources;
+    var parts = BuildCanonicalEmbeddingParts(
+        test.Title,
+        test.CategoryPath,
+        test.FullName,
+        test.Steps);
+    return BuildCanonicalEmbeddingText(parts);
 }
 
 static IReadOnlyList<string> BuildAllureIds(IReadOnlyList<CoverageAutomationTestCase> tests)
@@ -1034,6 +1031,98 @@ static IReadOnlyList<string> BuildAllureIds(IReadOnlyList<CoverageAutomationTest
     }
 
     return ids;
+}
+
+static IReadOnlyList<CanonicalCoverageItem> BuildCanonicalCoverageItemsFromAdo(CoveragePlanSummary plan)
+{
+    var items = new List<CanonicalCoverageItem>();
+    foreach (var suite in plan.Suites)
+    {
+        foreach (var test in suite.Tests)
+        {
+            var parts = BuildCanonicalEmbeddingParts(
+                test.Title,
+                suite.Name,
+                FullName: null,
+                new[] { test.Steps });
+            items.Add(new CanonicalCoverageItem(
+                Id: test.WorkItemId.ToString(),
+                WorkItemId: test.WorkItemId,
+                Title: test.Title,
+                CategoryPath: suite.Name,
+                FullName: null,
+                Uuid: null,
+                Parts: parts));
+        }
+    }
+
+    return items;
+}
+
+static IReadOnlyList<CanonicalCoverageItem> BuildCanonicalCoverageItemsFromAllure(CoverageAutomationReportSummary report)
+{
+    var items = new List<CanonicalCoverageItem>();
+    var ids = BuildAllureIds(report.Tests);
+    for (var i = 0; i < report.Tests.Count; i++)
+    {
+        var test = report.Tests[i];
+        var parts = BuildCanonicalEmbeddingParts(
+            test.Title,
+            test.CategoryPath,
+            test.FullName,
+            test.Steps);
+        items.Add(new CanonicalCoverageItem(
+            Id: ids[i],
+            WorkItemId: null,
+            Title: test.Title,
+            CategoryPath: test.CategoryPath,
+            FullName: test.FullName,
+            Uuid: test.Uuid,
+            Parts: parts));
+    }
+
+    return items;
+}
+
+static CoverageEmbeddingParts BuildCanonicalEmbeddingParts(
+    string? title,
+    string? categoryPath,
+    string? FullName,
+    IEnumerable<string>? steps)
+{
+    var normalizedSteps = NormalizeStepsForEmbedding(string.Join("\n", steps ?? Array.Empty<string>()));
+    return new CoverageEmbeddingParts(
+        TitleText: NormalizeScalarText(title),
+        CategoryText: NormalizeScalarText(categoryPath),
+        FullNameText: NormalizeScalarText(FullName),
+        StepsText: normalizedSteps);
+}
+
+static string BuildCanonicalEmbeddingText(CoverageEmbeddingParts parts)
+{
+    var sb = new StringBuilder();
+    if (!string.IsNullOrWhiteSpace(parts.CategoryText))
+        sb.AppendLine($"category: {parts.CategoryText}");
+    if (!string.IsNullOrWhiteSpace(parts.TitleText))
+        sb.AppendLine($"title: {parts.TitleText}");
+    if (!string.IsNullOrWhiteSpace(parts.FullNameText))
+        sb.AppendLine($"fullname: {parts.FullNameText}");
+    if (!string.IsNullOrWhiteSpace(parts.StepsText))
+    {
+        sb.AppendLine("steps:");
+        sb.AppendLine(parts.StepsText);
+    }
+
+    return sb.ToString().Trim();
+}
+
+static IReadOnlyList<CoverageEmbeddingSource> BuildEmbeddingSources(
+    IReadOnlyList<CanonicalCoverageItem> items,
+    Func<CanonicalCoverageItem, string> selector)
+{
+    return items
+        .Select(item => new CoverageEmbeddingSource(item.Id, selector(item)))
+        .ToList();
 }
 
 static async Task<CoverageEmbeddingFile> GetOrCreateEmbeddingsFile(
@@ -1082,6 +1171,80 @@ static async Task<CoverageEmbeddingFile> GetOrCreateEmbeddingsFile(
     var file = new CoverageEmbeddingFile(model, items);
     var json = JsonSerializer.Serialize(file, new JsonSerializerOptions { WriteIndented = true });
 
+    Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
+    await File.WriteAllTextAsync(filePath, json, ct);
+    return file;
+}
+
+static async Task<CoverageChunkEmbeddingFile> GetOrCreateChunkEmbeddingsFile(
+    string filePath,
+    string model,
+    IReadOnlyList<CoverageEmbeddingSource> sources,
+    LocalEmbeddingClient embeddings,
+    bool force,
+    CancellationToken ct)
+{
+    if (string.IsNullOrWhiteSpace(model))
+        throw new InvalidOperationException("Embedding model is not configured.");
+
+    if (!force && File.Exists(filePath))
+    {
+        var existingJson = await File.ReadAllTextAsync(filePath, ct);
+        var existing = JsonSerializer.Deserialize<CoverageChunkEmbeddingFile>(existingJson, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+
+        if (existing is not null
+            && string.Equals(existing.Model, model, StringComparison.OrdinalIgnoreCase)
+            && existing.Items.Count == sources.Count
+            && existing.Items.Select(i => i.Id).SequenceEqual(sources.Select(s => s.Id))
+            && existing.Items.Select(i => i.Text).SequenceEqual(sources.Select(s => s.Text)))
+        {
+            return existing;
+        }
+    }
+
+    if (sources.Count == 0)
+    {
+        var emptyFile = new CoverageChunkEmbeddingFile(model, Array.Empty<CoverageChunkEmbeddingItem>());
+        var emptyJson = JsonSerializer.Serialize(emptyFile, new JsonSerializerOptions { WriteIndented = true });
+        Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
+        await File.WriteAllTextAsync(filePath, emptyJson, ct);
+        return emptyFile;
+    }
+
+    const int maxChunkChars = 800;
+    var allChunks = new List<string>();
+    var sourceChunkRanges = new List<(int Start, int Count)>(sources.Count);
+
+    foreach (var source in sources)
+    {
+        var chunks = SplitTextIntoChunks(source.Text, maxChunkChars);
+        var start = allChunks.Count;
+        allChunks.AddRange(chunks);
+        sourceChunkRanges.Add((start, chunks.Count));
+    }
+
+    var chunkVectors = allChunks.Count == 0
+        ? Array.Empty<float[]>()
+        : (await EmbedInBatches(embeddings, allChunks, ct)).ToArray();
+
+    if (chunkVectors.Length != allChunks.Count)
+        throw new InvalidOperationException("Chunk embedding count does not match input count.");
+
+    var items = new List<CoverageChunkEmbeddingItem>(sources.Count);
+    for (var i = 0; i < sources.Count; i++)
+    {
+        var (start, count) = sourceChunkRanges[i];
+        var vectors = count == 0
+            ? Array.Empty<float[]>()
+            : chunkVectors.Skip(start).Take(count).ToArray();
+        items.Add(new CoverageChunkEmbeddingItem(sources[i].Id, sources[i].Text, vectors));
+    }
+
+    var file = new CoverageChunkEmbeddingFile(model, items);
+    var json = JsonSerializer.Serialize(file, new JsonSerializerOptions { WriteIndented = true });
     Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
     await File.WriteAllTextAsync(filePath, json, ct);
     return file;
@@ -1204,88 +1367,95 @@ static float[] AverageVectors(IReadOnlyList<float[]> vectors)
 static CoverageEmbeddingReport BuildEmbeddingReport(
     CoveragePlanSummary plan,
     CoverageAutomationReportSummary report,
-    CoverageEmbeddingFile adoEmbeddings,
-    CoverageEmbeddingFile reportEmbeddings,
+    IReadOnlyList<CanonicalCoverageItem> adoItems,
+    IReadOnlyList<CanonicalCoverageItem> allureItems,
+    CoverageEmbeddingFile adoTitleEmbeddings,
+    CoverageEmbeddingFile adoCategoryEmbeddings,
+    CoverageChunkEmbeddingFile adoStepsEmbeddings,
+    CoverageEmbeddingFile allureTitleEmbeddings,
+    CoverageEmbeddingFile allureCategoryEmbeddings,
+    CoverageChunkEmbeddingFile allureStepsEmbeddings,
     string teamId,
     string model,
     double minScore,
     int topK)
 {
-    var adoMeta = BuildAdoMeta(plan);
-    var allureMeta = BuildAllureMeta(report);
-
-    if (adoEmbeddings.Items.Count != adoMeta.Count || reportEmbeddings.Items.Count != allureMeta.Count)
-        throw new InvalidOperationException("Embedding metadata mismatch.");
-
-    var reportVectors = reportEmbeddings.Items.Select(i => NormalizeVector(i.Vector)).ToList();
-    var usedAllure = new HashSet<int>();
-    var matches = new List<CoverageEmbeddingMatch>();
-    var unmatchedAdo = new List<CoverageEmbeddingUnmatchedAdo>();
-
-    if (reportVectors.Count == 0)
+    if (adoItems.Count == 0)
     {
-        unmatchedAdo.AddRange(adoMeta.Select(a => new CoverageEmbeddingUnmatchedAdo(a.WorkItemId, a.Title, a.Suite)));
         return new CoverageEmbeddingReport(
             plan.PlanId,
             plan.SuiteId,
             teamId,
-            adoMeta.Count,
             0,
+            allureItems.Count,
             0,
             0,
             model,
             minScore,
             topK,
-            matches,
-            unmatchedAdo,
-            new List<CoverageEmbeddingUnmatchedAllure>());
+            Array.Empty<CoverageEmbeddingMatch>(),
+            Array.Empty<CoverageEmbeddingUnmatchedAdo>(),
+            allureItems.Select(a => new CoverageEmbeddingUnmatchedAllure(a.Title, a.FullName, a.Uuid)).ToList(),
+            Array.Empty<CoverageEmbeddingCandidate>());
     }
 
-    for (var i = 0; i < adoEmbeddings.Items.Count; i++)
+    var scoreMatrix = BuildSimilarityMatrix(
+        adoItems,
+        allureItems,
+        adoTitleEmbeddings,
+        adoCategoryEmbeddings,
+        adoStepsEmbeddings,
+        allureTitleEmbeddings,
+        allureCategoryEmbeddings,
+        allureStepsEmbeddings);
+
+    var assignment = SolveOptimalAssignment(scoreMatrix);
+    var matches = new List<CoverageEmbeddingMatch>();
+    var unmatchedAdo = new List<CoverageEmbeddingUnmatchedAdo>();
+    var matchedAllure = new HashSet<int>();
+    var candidates = BuildEmbeddingCandidates(adoItems, allureItems, scoreMatrix, topK);
+
+    for (var adoIndex = 0; adoIndex < adoItems.Count; adoIndex++)
     {
-        var adoVector = NormalizeVector(adoEmbeddings.Items[i].Vector);
-        var candidates = new List<(int Index, double Score)>(reportVectors.Count);
-
-        for (var j = 0; j < reportVectors.Count; j++)
+        var ado = adoItems[adoIndex];
+        var assignedAllure = adoIndex < assignment.Length ? assignment[adoIndex] : -1;
+        if (assignedAllure >= 0 && assignedAllure < allureItems.Count)
         {
-            var score = Dot(adoVector, reportVectors[j]);
-            candidates.Add((j, score));
+            var score = scoreMatrix[adoIndex][assignedAllure];
+            if (score.FinalScore >= minScore)
+            {
+                var allure = allureItems[assignedAllure];
+                matches.Add(new CoverageEmbeddingMatch(
+                    ado.WorkItemId ?? 0,
+                    ado.Title,
+                    ado.CategoryPath,
+                    allure.Title,
+                    allure.FullName,
+                    allure.Uuid,
+                    score.FinalScore,
+                    score.TitleScore,
+                    score.CategoryScore,
+                    score.StepsScore,
+                    "global_assignment"));
+                matchedAllure.Add(assignedAllure);
+                continue;
+            }
         }
 
-        var best = candidates
-            .OrderByDescending(c => c.Score)
-            .Take(topK)
-            .FirstOrDefault(c => !usedAllure.Contains(c.Index));
-
-        if (best.Score >= minScore && best.Index >= 0)
-        {
-            usedAllure.Add(best.Index);
-            var ado = adoMeta[i];
-            var allure = allureMeta[best.Index];
-            matches.Add(new CoverageEmbeddingMatch(
-                ado.WorkItemId,
-                ado.Title,
-                ado.Suite,
-                allure.Title,
-                allure.FullName,
-                allure.Uuid,
-                best.Score));
-        }
-        else
-        {
-            var ado = adoMeta[i];
-            unmatchedAdo.Add(new CoverageEmbeddingUnmatchedAdo(ado.WorkItemId, ado.Title, ado.Suite));
-        }
+        unmatchedAdo.Add(new CoverageEmbeddingUnmatchedAdo(
+            ado.WorkItemId ?? 0,
+            ado.Title,
+            ado.CategoryPath));
     }
 
-    var unmatchedAllure = allureMeta
-        .Where((_, index) => !usedAllure.Contains(index))
-        .Select(a => new CoverageEmbeddingUnmatchedAllure(a.Title, a.FullName, a.Uuid))
+    var unmatchedAllure = allureItems
+        .Where((_, index) => !matchedAllure.Contains(index))
+        .Select(item => new CoverageEmbeddingUnmatchedAllure(item.Title, item.FullName, item.Uuid))
         .ToList();
 
     var matchedCount = matches.Count;
-    var totalAdo = adoMeta.Count;
-    var totalAllure = allureMeta.Count;
+    var totalAdo = adoItems.Count;
+    var totalAllure = allureItems.Count;
     var coveragePercent = totalAdo == 0 ? 0 : Math.Round((double)matchedCount / totalAdo * 100, 2);
 
     return new CoverageEmbeddingReport(
@@ -1301,28 +1471,250 @@ static CoverageEmbeddingReport BuildEmbeddingReport(
         topK,
         matches,
         unmatchedAdo,
-        unmatchedAllure);
+        unmatchedAllure,
+        candidates);
 }
 
-static IReadOnlyList<(int WorkItemId, string Title, string Suite)> BuildAdoMeta(CoveragePlanSummary plan)
+static CoverageSimilarityScore[][] BuildSimilarityMatrix(
+    IReadOnlyList<CanonicalCoverageItem> adoItems,
+    IReadOnlyList<CanonicalCoverageItem> allureItems,
+    CoverageEmbeddingFile adoTitleEmbeddings,
+    CoverageEmbeddingFile adoCategoryEmbeddings,
+    CoverageChunkEmbeddingFile adoStepsEmbeddings,
+    CoverageEmbeddingFile allureTitleEmbeddings,
+    CoverageEmbeddingFile allureCategoryEmbeddings,
+    CoverageChunkEmbeddingFile allureStepsEmbeddings)
 {
-    var output = new List<(int WorkItemId, string Title, string Suite)>();
-    foreach (var suite in plan.Suites)
+    ValidateEmbeddingAlignment(adoItems, adoTitleEmbeddings.Items, "ADO title");
+    ValidateEmbeddingAlignment(adoItems, adoCategoryEmbeddings.Items, "ADO category");
+    ValidateChunkEmbeddingAlignment(adoItems, adoStepsEmbeddings.Items, "ADO steps");
+    ValidateEmbeddingAlignment(allureItems, allureTitleEmbeddings.Items, "Allure title");
+    ValidateEmbeddingAlignment(allureItems, allureCategoryEmbeddings.Items, "Allure category");
+    ValidateChunkEmbeddingAlignment(allureItems, allureStepsEmbeddings.Items, "Allure steps");
+
+    var adoTitleVectors = adoTitleEmbeddings.Items.Select(item => NormalizeVector(item.Vector)).ToArray();
+    var adoCategoryVectors = adoCategoryEmbeddings.Items.Select(item => NormalizeVector(item.Vector)).ToArray();
+    var allureTitleVectors = allureTitleEmbeddings.Items.Select(item => NormalizeVector(item.Vector)).ToArray();
+    var allureCategoryVectors = allureCategoryEmbeddings.Items.Select(item => NormalizeVector(item.Vector)).ToArray();
+    var matrix = new CoverageSimilarityScore[adoItems.Count][];
+
+    for (var i = 0; i < adoItems.Count; i++)
     {
-        foreach (var test in suite.Tests)
-            output.Add((test.WorkItemId, test.Title, suite.Name));
+        matrix[i] = new CoverageSimilarityScore[allureItems.Count];
+        for (var j = 0; j < allureItems.Count; j++)
+        {
+            var titleScore = Dot(adoTitleVectors[i], allureTitleVectors[j]);
+            var categoryScore = Dot(adoCategoryVectors[i], allureCategoryVectors[j]);
+            var stepsScore = CalculateChunkedSimilarity(
+                adoStepsEmbeddings.Items[i].Vectors,
+                allureStepsEmbeddings.Items[j].Vectors);
+            var finalScore = (titleScore * 0.45) + (categoryScore * 0.15) + (stepsScore * 0.40);
+            matrix[i][j] = new CoverageSimilarityScore(finalScore, titleScore, categoryScore, stepsScore);
+        }
     }
 
-    return output;
+    return matrix;
 }
 
-static IReadOnlyList<(string Title, string? FullName, string? Uuid)> BuildAllureMeta(CoverageAutomationReportSummary report)
+static void ValidateEmbeddingAlignment(
+    IReadOnlyList<CanonicalCoverageItem> items,
+    IReadOnlyList<CoverageEmbeddingItem> embeddedItems,
+    string scope)
 {
-    var output = new List<(string Title, string? FullName, string? Uuid)>();
-    foreach (var test in report.Tests)
-        output.Add((test.Title, test.FullName, test.Uuid));
+    if (items.Count != embeddedItems.Count)
+        throw new InvalidOperationException($"{scope} embedding metadata mismatch.");
 
-    return output;
+    for (var i = 0; i < items.Count; i++)
+    {
+        if (!string.Equals(items[i].Id, embeddedItems[i].Id, StringComparison.Ordinal))
+            throw new InvalidOperationException($"{scope} embedding id mismatch at index {i}.");
+    }
+}
+
+static void ValidateChunkEmbeddingAlignment(
+    IReadOnlyList<CanonicalCoverageItem> items,
+    IReadOnlyList<CoverageChunkEmbeddingItem> embeddedItems,
+    string scope)
+{
+    if (items.Count != embeddedItems.Count)
+        throw new InvalidOperationException($"{scope} embedding metadata mismatch.");
+
+    for (var i = 0; i < items.Count; i++)
+    {
+        if (!string.Equals(items[i].Id, embeddedItems[i].Id, StringComparison.Ordinal))
+            throw new InvalidOperationException($"{scope} embedding id mismatch at index {i}.");
+    }
+}
+
+static IReadOnlyList<CoverageEmbeddingCandidate> BuildEmbeddingCandidates(
+    IReadOnlyList<CanonicalCoverageItem> adoItems,
+    IReadOnlyList<CanonicalCoverageItem> allureItems,
+    CoverageSimilarityScore[][] scoreMatrix,
+    int topK)
+{
+    var candidates = new List<CoverageEmbeddingCandidate>();
+    var take = topK > 0 ? topK : 5;
+    for (var i = 0; i < adoItems.Count; i++)
+    {
+        var ranked = Enumerable.Range(0, allureItems.Count)
+            .Select(index => (Index: index, Score: scoreMatrix[i][index]))
+            .OrderByDescending(item => item.Score.FinalScore)
+            .ThenByDescending(item => item.Score.TitleScore)
+            .Take(take)
+            .ToList();
+
+        for (var rank = 0; rank < ranked.Count; rank++)
+        {
+            var candidate = ranked[rank];
+            var allure = allureItems[candidate.Index];
+            candidates.Add(new CoverageEmbeddingCandidate(
+                adoItems[i].WorkItemId ?? 0,
+                adoItems[i].Title,
+                adoItems[i].CategoryPath,
+                allure.Title,
+                allure.FullName,
+                allure.Uuid,
+                candidate.Score.FinalScore,
+                candidate.Score.TitleScore,
+                candidate.Score.CategoryScore,
+                candidate.Score.StepsScore,
+                rank + 1));
+        }
+    }
+
+    return candidates;
+}
+
+static double CalculateChunkedSimilarity(
+    IReadOnlyList<float[]> left,
+    IReadOnlyList<float[]> right)
+{
+    if (left.Count == 0 || right.Count == 0)
+        return 0;
+
+    var leftVectors = left.Select(NormalizeVector).Where(v => v.Length > 0).ToList();
+    var rightVectors = right.Select(NormalizeVector).Where(v => v.Length > 0).ToList();
+    if (leftVectors.Count == 0 || rightVectors.Count == 0)
+        return 0;
+
+    static double AverageBestMatches(IReadOnlyList<float[]> source, IReadOnlyList<float[]> target)
+    {
+        double sum = 0;
+        foreach (var sourceVector in source)
+        {
+            var best = 0.0;
+            foreach (var targetVector in target)
+                best = Math.Max(best, Dot(sourceVector, targetVector));
+            sum += best;
+        }
+
+        return sum / source.Count;
+    }
+
+    var forward = AverageBestMatches(leftVectors, rightVectors);
+    var backward = AverageBestMatches(rightVectors, leftVectors);
+    return (forward + backward) / 2.0;
+}
+
+static int[] SolveOptimalAssignment(CoverageSimilarityScore[][] scoreMatrix)
+{
+    var rowCount = scoreMatrix.Length;
+    var colCount = rowCount == 0 ? 0 : scoreMatrix[0].Length;
+    var size = Math.Max(rowCount, colCount);
+    if (size == 0)
+        return Array.Empty<int>();
+
+    var maxScore = 0.0;
+    for (var i = 0; i < rowCount; i++)
+    {
+        for (var j = 0; j < colCount; j++)
+            maxScore = Math.Max(maxScore, scoreMatrix[i][j].FinalScore);
+    }
+
+    var cost = new double[size + 1, size + 1];
+    for (var i = 1; i <= size; i++)
+    {
+        for (var j = 1; j <= size; j++)
+        {
+            var score = (i <= rowCount && j <= colCount)
+                ? scoreMatrix[i - 1][j - 1].FinalScore
+                : 0.0;
+            cost[i, j] = maxScore - score;
+        }
+    }
+
+    var u = new double[size + 1];
+    var v = new double[size + 1];
+    var p = new int[size + 1];
+    var way = new int[size + 1];
+
+    for (var i = 1; i <= size; i++)
+    {
+        p[0] = i;
+        var j0 = 0;
+        var minv = new double[size + 1];
+        var used = new bool[size + 1];
+        for (var j = 0; j <= size; j++)
+            minv[j] = double.PositiveInfinity;
+
+        do
+        {
+            used[j0] = true;
+            var i0 = p[j0];
+            var delta = double.PositiveInfinity;
+            var j1 = 0;
+            for (var j = 1; j <= size; j++)
+            {
+                if (used[j])
+                    continue;
+
+                var cur = cost[i0, j] - u[i0] - v[j];
+                if (cur < minv[j])
+                {
+                    minv[j] = cur;
+                    way[j] = j0;
+                }
+
+                if (minv[j] < delta)
+                {
+                    delta = minv[j];
+                    j1 = j;
+                }
+            }
+
+            for (var j = 0; j <= size; j++)
+            {
+                if (used[j])
+                {
+                    u[p[j]] += delta;
+                    v[j] -= delta;
+                }
+                else
+                {
+                    minv[j] -= delta;
+                }
+            }
+
+            j0 = j1;
+        } while (p[j0] != 0);
+
+        do
+        {
+            var j1 = way[j0];
+            p[j0] = p[j1];
+            j0 = j1;
+        } while (j0 != 0);
+    }
+
+    var assignment = Enumerable.Repeat(-1, rowCount).ToArray();
+    for (var j = 1; j <= size; j++)
+    {
+        var row = p[j];
+        if (row >= 1 && row <= rowCount)
+            assignment[row - 1] = j <= colCount ? j - 1 : -1;
+    }
+
+    return assignment;
 }
 
 static float[] NormalizeVector(float[] vector)
@@ -1352,13 +1744,95 @@ static double Dot(float[] a, float[] b)
     return sum;
 }
 
-static string NormalizeText(string text)
+static string NormalizeText(string? text)
+    => NormalizeScalarText(text);
+
+static string NormalizeScalarText(string? text)
 {
     if (string.IsNullOrWhiteSpace(text))
         return string.Empty;
 
     var collapsed = Regex.Replace(text, @"\s+", " ").Trim();
     return collapsed.ToLowerInvariant();
+}
+
+static string NormalizeStepsForEmbedding(string text)
+{
+    if (string.IsNullOrWhiteSpace(text))
+        return string.Empty;
+
+    var decoded = WebUtility.HtmlDecode(StripHtml(text));
+    var lines = decoded
+        .Replace("\r", "\n")
+        .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .Select(NormalizeStepLineForEmbedding)
+        .Where(line => !string.IsNullOrWhiteSpace(line))
+        .ToList();
+
+    if (lines.Count == 0)
+        return string.Empty;
+
+    const int chunkSize = 20;
+    if (lines.Count <= chunkSize)
+        return string.Join("\n", lines);
+
+    var summaries = new List<string>();
+    for (var i = 0; i < lines.Count; i += chunkSize)
+    {
+        var chunk = lines.Skip(i).Take(chunkSize).ToList();
+        if (chunk.Count == 0)
+            continue;
+
+        var first = chunk.First();
+        var middle = chunk[chunk.Count / 2];
+        var last = chunk.Last();
+        summaries.Add($"chunk {i / chunkSize + 1}: first {first} middle {middle} last {last}");
+    }
+
+    return string.Join("\n", summaries);
+}
+
+static string NormalizeStepLineForEmbedding(string line)
+{
+    var normalized = NormalizeScalarText(line);
+    if (string.IsNullOrWhiteSpace(normalized))
+        return string.Empty;
+
+    normalized = Regex.Replace(normalized, @"^\s*(?:step\s*)?\d+\s*[\.\):\-]\s*", "");
+    normalized = Regex.Replace(normalized, @"^\s*[-*•]+\s*", "");
+
+    var grouped = Regex.Match(
+        normalized,
+        @"^json steps \d+\-\d+\.\s*first:\s*(?<first>.+?)\s+last:\s*(?<last>.+?)(?:\|.*)?$",
+        RegexOptions.IgnoreCase);
+    if (grouped.Success)
+    {
+        var first = SummarizePayloadForEmbedding(grouped.Groups["first"].Value);
+        var last = SummarizePayloadForEmbedding(grouped.Groups["last"].Value);
+        return $"grouped first {first} last {last}";
+    }
+
+    return SummarizePayloadForEmbedding(normalized);
+}
+
+static string SummarizePayloadForEmbedding(string text)
+{
+    var normalized = NormalizeScalarText(text);
+    if (string.IsNullOrWhiteSpace(normalized))
+        return string.Empty;
+
+    normalized = Regex.Replace(normalized, @"[{}\[\]""']", " ");
+    normalized = Regex.Replace(normalized, @"[:;,=|]", " ");
+    normalized = Regex.Replace(normalized, @"\\[rnqt]", " ");
+    normalized = Regex.Replace(normalized, @"\b\d{4,}\b", "#");
+    normalized = Regex.Replace(normalized, @"\s+", " ").Trim();
+
+    const int maxTokens = 40;
+    var tokens = normalized
+        .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+        .Take(maxTokens)
+        .ToArray();
+    return string.Join(' ', tokens);
 }
 
 static string StripHtml(string html)
@@ -1498,7 +1972,11 @@ static async Task<CoverageEmbeddingLlmCoverageReport> BuildLlmCoverageFromUnmatc
                 candidate.Title,
                 candidate.FullName,
                 candidate.Uuid,
-                1.0));
+                1.0,
+                1.0,
+                1.0,
+                1.0,
+                "llm_review"));
 
             matchedAdo.Add(d.WorkItemId);
             usedCandidates.Add(d.CandidateId);
@@ -2043,7 +2521,7 @@ static Dictionary<int, (string Title, string Suite, string Steps)> BuildAdoDetai
     {
         foreach (var test in suite.Tests)
         {
-            var steps = NormalizeText(test.Steps);
+            var steps = NormalizeStepsForEmbedding(test.Steps);
             dict[test.WorkItemId] = (test.Title, suite.Name, steps);
         }
     }
@@ -2056,7 +2534,7 @@ static List<(string Title, string? FullName, string? Uuid, string Steps)> BuildA
     var list = new List<(string Title, string? FullName, string? Uuid, string Steps)>();
     foreach (var test in report.Tests)
     {
-        var steps = test.Steps is { Count: > 0 } ? NormalizeText(string.Join("\n", test.Steps)) : string.Empty;
+        var steps = test.Steps is { Count: > 0 } ? NormalizeStepsForEmbedding(string.Join("\n", test.Steps)) : string.Empty;
         list.Add((test.Title, test.FullName, test.Uuid, steps));
     }
 
@@ -2530,3 +3008,33 @@ sealed record LlmCoverageDecision(
     string Decision,
     double Confidence,
     string Reason);
+
+sealed record CoverageEmbeddingParts(
+    string TitleText,
+    string CategoryText,
+    string FullNameText,
+    string StepsText);
+
+sealed record CanonicalCoverageItem(
+    string Id,
+    int? WorkItemId,
+    string Title,
+    string CategoryPath,
+    string? FullName,
+    string? Uuid,
+    CoverageEmbeddingParts Parts);
+
+sealed record CoverageSimilarityScore(
+    double FinalScore,
+    double TitleScore,
+    double CategoryScore,
+    double StepsScore);
+
+sealed record CoverageChunkEmbeddingItem(
+    string Id,
+    string Text,
+    IReadOnlyList<float[]> Vectors);
+
+sealed record CoverageChunkEmbeddingFile(
+    string Model,
+    IReadOnlyList<CoverageChunkEmbeddingItem> Items);

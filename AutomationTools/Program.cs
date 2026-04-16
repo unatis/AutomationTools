@@ -411,12 +411,12 @@ app.MapPost("/coverage/report-zip", async (
         .Where(t => !string.IsNullOrWhiteSpace(t.Title))
         .ToList();
 
-    var report = new CoverageAutomationReportSummary
+    var report = NormalizeCoverageReportSummary(new CoverageAutomationReportSummary
     {
         TotalTests = tests.Count,
         Tests = tests,
         CategoryIndex = BuildCoverageCategoryIndex(tests)
-    };
+    });
     var key = $"coverage:report:{teamId}";
     cache.Set(key, titles, TimeSpan.FromMinutes(10));
     cache.Set($"coverage:report-model:{teamId}", report, TimeSpan.FromMinutes(10));
@@ -981,16 +981,65 @@ static CoverageAutomationReportSummary NormalizeCoverageReportSummary(CoverageAu
         })
         .ToList();
 
+    var deduplicatedTests = DeduplicateCoverageTests(normalizedTests);
+
     return new CoverageAutomationReportSummary
     {
         Version = report.Version > 0 ? report.Version : 2,
         Source = string.IsNullOrWhiteSpace(report.Source) ? "allure-zip" : report.Source,
-        TotalTests = normalizedTests.Count,
-        Tests = normalizedTests,
-        CategoryIndex = report.CategoryIndex is { Count: > 0 }
-            ? report.CategoryIndex
-            : BuildCoverageCategoryIndex(normalizedTests)
+        TotalTests = deduplicatedTests.Count,
+        Tests = deduplicatedTests,
+        CategoryIndex = BuildCoverageCategoryIndex(deduplicatedTests)
     };
+}
+
+static IReadOnlyList<CoverageAutomationTestCase> DeduplicateCoverageTests(IReadOnlyList<CoverageAutomationTestCase> tests)
+{
+    var deduplicated = new List<CoverageAutomationTestCase>(tests.Count);
+    var indexByKey = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+    foreach (var test in tests)
+    {
+        var key = BuildCoverageTestIdentityKey(test);
+        if (!indexByKey.TryGetValue(key, out var existingIndex))
+        {
+            indexByKey[key] = deduplicated.Count;
+            deduplicated.Add(test);
+            continue;
+        }
+
+        if (ShouldPreferCoverageTest(test, deduplicated[existingIndex]))
+            deduplicated[existingIndex] = test;
+    }
+
+    return deduplicated;
+}
+
+static string BuildCoverageTestIdentityKey(CoverageAutomationTestCase test)
+{
+    var categoryPath = string.IsNullOrWhiteSpace(test.CategoryPath) ? "Uncategorized" : test.CategoryPath.Trim();
+    var identity = !string.IsNullOrWhiteSpace(test.FullName)
+        ? test.FullName.Trim()
+        : !string.IsNullOrWhiteSpace(test.Title)
+            ? test.Title.Trim()
+            : string.Empty;
+
+    return $"{categoryPath}||{identity}";
+}
+
+static bool ShouldPreferCoverageTest(CoverageAutomationTestCase candidate, CoverageAutomationTestCase current)
+{
+    var candidateStepCount = candidate.Steps?.Count ?? 0;
+    var currentStepCount = current.Steps?.Count ?? 0;
+    if (candidateStepCount != currentStepCount)
+        return candidateStepCount > currentStepCount;
+
+    var candidateHasUuid = !string.IsNullOrWhiteSpace(candidate.Uuid);
+    var currentHasUuid = !string.IsNullOrWhiteSpace(current.Uuid);
+    if (candidateHasUuid != currentHasUuid)
+        return candidateHasUuid;
+
+    return false;
 }
 
 static string BuildAllureEmbeddingText(CoverageAutomationTestCase test)
